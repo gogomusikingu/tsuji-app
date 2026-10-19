@@ -42,12 +42,21 @@ enum Theme {
 struct TsujiMark: View {
     var ink: Color = Theme.ink
     var accent: Color = Theme.shu
+    /// Drops the icon's built-in margin so the book fills the frame (for use beside text).
+    /// The app icon and the launch screen keep the margin.
+    var tight = false
 
     var body: some View {
         Canvas { ctx, size in
             let k = min(size.width, size.height) / 1024
             ctx.translateBy(x: (size.width - 1024 * k) / 2, y: (size.height - 1024 * k) / 2)
             ctx.scaleBy(x: k, y: k)
+            if tight {
+                // The drawing spans roughly x 180...845, y 200...745; scale that up to the frame.
+                ctx.translateBy(x: 512, y: 512)
+                ctx.scaleBy(x: 1.45, y: 1.45)
+                ctx.translateBy(x: -512, y: -472)
+            }
 
             let farY: CGFloat = 240, nearY: CGFloat = 570, dip: CGFloat = 34, rise: CGFloat = 22, block: CGFloat = 120
             let wf: CGFloat = 284, wn: CGFloat = 315

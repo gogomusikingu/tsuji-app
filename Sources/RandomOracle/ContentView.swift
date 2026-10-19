@@ -39,6 +39,10 @@ struct ContentView: View {
                     .onTapGesture { skipSplash = true }
             }
         }
+        #if DEBUG
+        // Screenshot automation: TSUJI_TAB=records starts on the journal.
+        .onAppear { if ProcessInfo.processInfo.environment["TSUJI_TAB"] == "records" { tab = .records } }
+        #endif
         .task {
             // Show the name and mark for a moment while the text loads, then reveal the app
             // (and the guide on first run).
@@ -75,8 +79,8 @@ struct ContentView: View {
     /// A quiet two-item bar in the book's type, instead of the system tab bar.
     private func tabBar(_ l: L10n) -> some View {
         HStack {
-            barItem(l.tabDraw, "book", .draw)
-            barItem(l.tabRecords, "clock", .records)
+            barItem(l.tabDraw, .draw) { Image(systemName: "book").font(.system(size: 18, weight: .light)) }
+            barItem(l.tabRecords, .records) { KoyomiIcon().frame(width: 22, height: 22) }
         }
         .padding(.top, 10)
         .padding(.bottom, 4)
@@ -84,10 +88,10 @@ struct ContentView: View {
         .background(Theme.paper)
     }
 
-    private func barItem(_ title: String, _ icon: String, _ target: Tab) -> some View {
+    private func barItem(_ title: String, _ target: Tab, @ViewBuilder icon: () -> some View) -> some View {
         Button { withAnimation(Fade.animation) { tab = target } } label: {
             VStack(spacing: 4) {
-                Image(systemName: icon).font(.system(size: 18, weight: .light))
+                icon().frame(height: 22)
                 Text(title).font(Theme.mincho(10))
             }
             .frame(maxWidth: .infinity)
@@ -97,8 +101,8 @@ struct ContentView: View {
     }
 
     private func header(_ l: L10n) -> some View {
-        HStack(spacing: 14) {
-            TsujiMark().frame(width: 30, height: 30)
+        HStack(spacing: 10) {
+            TsujiMark(tight: true).frame(width: 40, height: 40)
             VStack(alignment: .leading, spacing: 2) {
                 // The tagline leads: it says what the app does; the name alone would not.
                 Text(l.tagline).font(Theme.mincho(15, bold: true)).lineLimit(1).minimumScaleFactor(0.8)

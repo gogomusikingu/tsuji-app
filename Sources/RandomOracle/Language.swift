@@ -21,6 +21,7 @@ struct L10n {
                           "Hold one dilemma in your mind.\nThe book opens at random.\nThere is no second draw.") }
     var openButton: String { t("書をひらく", "Open the book") }
     var focusing: String { t("目を閉じて、迷いを思い浮かべて…", "Close your eyes and hold your dilemma…") }
+    var focusingOpen: String { t("書が、ひらかれます。", "The book opens.") }
     var step1: String { t("いちばん目に止まった言葉はどれですか？", "Which words caught your eye first?") }
     var step2: String { t("その言葉を、あなたの迷いに置き換えるとしたら？", "If those words were about your dilemma, what would they mean?") }
     var step3: String { t("では、どうしますか？", "So, what will you do?") }
@@ -67,6 +68,9 @@ struct L10n {
     var shareTitle: String { t("この一節をシェア", "Share this verse") }
     var shareIncludeReading: String { t("自分の読み方も載せる", "Include my reading") }
     var cancel: String { t("やめる", "Cancel") }
+    var olderDay: String { t("‹ 前の日", "‹ Earlier") }
+    var newerDay: String { t("次の日 ›", "Later ›") }
+    func openedAt(_ time: String) -> String { t("\(time) にひらいた", "opened \(time)") }
     var noRecords: String { t("まだ記録はありません", "No entries yet") }
     var disclaimer: String { t("最終的な判断は、あなた自身が行ってください。", "The final decision is always yours.") }
     func nextDraw(_ remaining: String) -> String { t("次に書をひらけるまで \(remaining)", "Next opening in \(remaining)") }

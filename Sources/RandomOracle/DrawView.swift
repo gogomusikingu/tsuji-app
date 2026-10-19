@@ -11,6 +11,9 @@ struct DrawView: View {
     @State private var phase: Phase = .idle
     @State private var entryID: UUID?
     @State private var pageAngle: Double = 90
+    /// 0: silence, 1: "close your eyes…", 2: "the book opens."
+    @State private var focusStage = 0
+    @State private var breathe = false
     @State private var step = 0
     @State private var showContext = false
     @State private var showOthers = false
@@ -71,7 +74,7 @@ struct DrawView: View {
     private func closedHome(remaining: TimeInterval, _ l: L10n) -> some View {
         VStack(spacing: 36) {
             Spacer()
-            TsujiMark().frame(width: 120, height: 120)
+            TsujiMark(tight: true).frame(width: 150, height: 150)
             Text(l.todayAlreadyOpen)
                 .font(Theme.mincho(16))
                 .multilineTextAlignment(.center)
@@ -115,7 +118,7 @@ struct DrawView: View {
     private func intro(_ l: L10n, remaining: TimeInterval) -> some View {
         VStack(spacing: 36) {
             Spacer()
-            TsujiMark().frame(width: 120, height: 120)
+            TsujiMark(tight: true).frame(width: 150, height: 150)
             Text(l.intro)
                 .font(Theme.mincho(16))
                 .multilineTextAlignment(.center)
@@ -135,8 +138,18 @@ struct DrawView: View {
     private func focusing(_ l: L10n) -> some View {
         VStack(spacing: 28) {
             Spacer()
-            TsujiMark().frame(width: 80, height: 80).opacity(0.5)
-            Text(l.focusing).font(Theme.mincho(15)).foregroundStyle(Theme.inkFaint)
+            // The mark breathes slowly while the user holds the dilemma in mind.
+            TsujiMark(tight: true).frame(width: 110, height: 110)
+                .opacity(breathe ? 0.75 : 0.35)
+                .scaleEffect(breathe ? 1.04 : 0.96)
+                .animation(.easeInOut(duration: 2.2).repeatForever(autoreverses: true), value: breathe)
+                .onAppear { breathe = true }
+                .onDisappear { breathe = false }
+            ZStack {
+                Text(l.focusing).opacity(focusStage == 1 ? 1 : 0)
+                Text(l.focusingOpen).opacity(focusStage == 2 ? 1 : 0)
+            }
+            .font(Theme.mincho(15)).foregroundStyle(Theme.inkFaint)
             Spacer()
         }
     }
@@ -215,8 +228,12 @@ struct DrawView: View {
         cooldown.markDrawn()
         journal.upsert(drawn)
         entryID = drawn.id
+        focusStage = 0
         withAnimation(Fade.animation) { phase = .focusing }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+        // About six seconds of quiet before the page turns: words surface one at a time.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { withAnimation(.easeInOut(duration: 1.2)) { focusStage = 1 } }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 4.0) { withAnimation(.easeInOut(duration: 1.2)) { focusStage = 2 } }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 6.5) {
             pageAngle = 90
             step = 0
             showContext = false
