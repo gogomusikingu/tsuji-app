@@ -16,6 +16,9 @@ struct DrawView: View {
     /// The verse line on the mark during the pause: 0 at first, rising to 1.
     @State private var verseRise = 0.0
     @State private var closedVerse = 0.0
+    /// Set while the book is being opened, so the home screen fading out keeps showing the
+    /// "open the book" page instead of flashing "already opened" (the draw is recorded first).
+    @State private var opening = false
     @State private var step = 0
     @State private var showContext = false
     @State private var showOthers = false
@@ -61,7 +64,7 @@ struct DrawView: View {
     private func idle(_ l: L10n) -> some View {
         let remaining = cooldown.remaining(now: now)
         ZStack {
-            if remaining > 0, let today = journal.entries.first {
+            if remaining > 0, !opening, let today = journal.entries.first {
                 if showToday {
                     todayPage(today, remaining: remaining, l).transition(.opacity)
                 } else {
@@ -217,6 +220,7 @@ struct DrawView: View {
         cooldown.markDrawn()
         journal.upsert(drawn)
         entryID = drawn.id
+        opening = true
         focusStage = 0
         verseRise = 0
         withAnimation(Fade.animation) { phase = .focusing }
@@ -240,6 +244,7 @@ struct DrawView: View {
         entryID = nil
         showContext = false
         showToday = false
+        opening = false
         now = Date()
         withAnimation(Fade.animation) { phase = .idle }
     }
