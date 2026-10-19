@@ -200,7 +200,8 @@ struct SplashView: View {
     var body: some View {
         let l = L10n(lang: lang)
         let shown = animated ? stage : 2
-        CenterStage {
+        // The book is not open yet: no verse line on the page.
+        CenterStage(verse: 0) {
             VStack(spacing: 22) {
                 Text(l.tagline).font(Theme.mincho(lang == .ja ? 24 : 22, bold: true)).opacity(shown >= 1 ? 1 : 0)
                 Text(l.appName).font(Theme.mincho(18)).foregroundStyle(Theme.inkFaint).opacity(shown >= 2 ? 1 : 0)

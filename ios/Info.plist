@@ -7,7 +7,7 @@
 		<key>UIColorName</key>
 		<string>LaunchBackground</string>
 		<key>UIImageName</key>
-		<string>LaunchStage</string>
+		<string>LaunchQuiet</string>
 		<key>UIImageRespectsSafeAreaInsets</key>
 		<false/>
 	</dict>

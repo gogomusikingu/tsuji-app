@@ -24,11 +24,11 @@ enum PreviewRenderer {
         }
         // System launch screen image: the mark alone on transparency, at the size CenterStage shows it.
         for scale in 1...3 {
-            let r = ImageRenderer(content: TsujiMark(tight: true).frame(width: CenterStage<EmptyView>.markSize, height: CenterStage<EmptyView>.markSize))
+            let r = ImageRenderer(content: TsujiMark(tight: true, verse: 0).frame(width: CenterStage<EmptyView>.markSize, height: CenterStage<EmptyView>.markSize))
             r.scale = CGFloat(scale)
             if let tiff = r.nsImage?.tiffRepresentation, let rep = NSBitmapImageRep(data: tiff),
                let png = rep.representation(using: .png, properties: [:]) {
-                try? png.write(to: dir.appendingPathComponent("LaunchStage@\(scale)x.png"))
+                try? png.write(to: dir.appendingPathComponent("LaunchQuiet@\(scale)x.png"))
             }
         }
         for lang in AppLanguage.allCases {

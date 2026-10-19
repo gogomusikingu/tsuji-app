@@ -15,6 +15,7 @@ struct DrawView: View {
     @State private var focusStage = 0
     /// The verse line on the mark during the pause: 0 at first, rising to 1.
     @State private var verseRise = 0.0
+    @State private var closedVerse = 0.0
     @State private var step = 0
     @State private var showContext = false
     @State private var showOthers = false
@@ -86,7 +87,8 @@ struct DrawView: View {
     /// The book is closed for today; today's verse can be read again from here.
     private func closedHome(remaining: TimeInterval, _ l: L10n) -> some View {
         VStack(spacing: 0) {
-            CenterStage {
+            // Today's verse has been drawn, so its line is on the page; it surfaces gently, not at once.
+            CenterStage(verse: closedVerse) {
                 VStack(spacing: 18) {
                     Text(l.todayAlreadyOpen)
                         .font(Theme.mincho(16))
@@ -101,11 +103,16 @@ struct DrawView: View {
                 }
             }
         }
+        .onAppear {
+            closedVerse = 0
+            withAnimation(.easeInOut(duration: 2.0).delay(0.4)) { closedVerse = 1 }
+        }
     }
 
     private func intro(_ l: L10n, remaining: TimeInterval) -> some View {
         VStack(spacing: 0) {
-            CenterStage {
+            // No verse on the page yet: it only surfaces once the book is opened.
+            CenterStage(verse: 0) {
                 VStack(spacing: 18) {
                     Text(l.intro)
                         .font(Theme.mincho(16))
