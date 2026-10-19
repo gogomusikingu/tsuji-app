@@ -5,6 +5,8 @@ import SwiftUI
 struct RecordsView: View {
     @ObservedObject var journal: Journal
     let lang: AppLanguage
+    /// For the "read around it" toggle; pages still show while the text is loading.
+    var bible: Bible?
     @State private var index = 0
 
     var body: some View {
@@ -17,7 +19,7 @@ struct RecordsView: View {
             let i = min(index, entries.count - 1)
             VStack(spacing: 14) {
                 ZStack {
-                    DayPage(entry: entries[i], journal: journal, lang: lang)
+                    DayPage(entry: entries[i], journal: journal, lang: lang, bible: bible)
                         .id(entries[i].id)
                         .transition(.opacity)
                 }
@@ -51,47 +53,40 @@ struct RecordsView: View {
     }
 }
 
-/// One calendar leaf: the date set large, the verse drawn that day, and what was written about it.
+/// One day: laid out like today's verse at home, with the date above it.
 private struct DayPage: View {
     let entry: JournalEntry
     @ObservedObject var journal: Journal
     let lang: AppLanguage
+    let bible: Bible?
     @State private var sharing = false
+    @State private var showContext = false
 
     var body: some View {
         let l = L10n(lang: lang)
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
-                HStack(alignment: .lastTextBaseline, spacing: 14) {
-                    Text(Self.format("d", entry.date, lang)).font(Theme.mincho(60, bold: true))
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(Self.format(lang == .ja ? "M月" : "MMMM", entry.date, lang)).font(Theme.mincho(15))
-                        Text(Self.format("EEEE", entry.date, lang)).font(Theme.mincho(12)).foregroundStyle(Theme.inkFaint)
-                    }
+                HStack(alignment: .firstTextBaseline) {
+                    Text(Self.format(lang == .ja ? "yyyy年M月d日（E）" : "EEEE, MMMM d, yyyy", entry.date, lang))
+                        .font(Theme.mincho(15))
                     Spacer()
-                    Text(Self.format("yyyy", entry.date, lang)).font(Theme.mincho(11)).foregroundStyle(Theme.inkFaint)
-                }
-                Rectangle().fill(Theme.ink.opacity(0.15)).frame(height: 1)
-                Text(entry.verse.text(lang)).font(Theme.verse(18)).lineSpacing(9)
-                    .fixedSize(horizontal: false, vertical: true)
-                HStack {
                     Text(l.openedAt(Self.format("HH:mm", entry.date, lang)))
-                    Spacer()
-                    Text(entry.verse.reference(lang))
+                        .font(Theme.mincho(11)).foregroundStyle(Theme.inkFaint)
                 }
-                .font(Theme.mincho(11)).foregroundStyle(Theme.inkFaint)
+                if let bible {
+                    VersePage(bible: bible, verse: entry.verse, lang: lang, showContext: $showContext)
+                } else {
+                    Text(entry.verse.text(lang)).font(Theme.verse(21)).lineSpacing(12)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
                 NotesDisclosure(entryID: entry.id, journal: journal, lang: lang)
-                    .padding(.top, 6)
                 HStack {
-                    Spacer()
                     Button { sharing = true } label: { Label(l.share, systemImage: "square.and.arrow.up") }
                         .buttonStyle(.plain).font(Theme.mincho(13)).foregroundStyle(Theme.shu)
+                    Spacer()
                 }
             }
-            .padding(26)
-            .background(StackedLeaves())
-            .padding(.top, 10)
-            .padding(.trailing, 10)
+            .padding(8)
         }
         .scrollContentBackground(.hidden)
         .fadeCover(isPresented: $sharing) {
@@ -104,19 +99,6 @@ private struct DayPage: View {
         f.locale = Locale(identifier: lang == .ja ? "ja_JP" : "en_US")
         f.dateFormat = pattern
         return f.string(from: date)
-    }
-}
-
-/// The page on top of a small stack of earlier leaves, slightly offset behind it.
-struct StackedLeaves: View {
-    var body: some View {
-        ZStack {
-            Rectangle().fill(Theme.paperDeep.opacity(0.7)).offset(x: 8, y: -8)
-            Rectangle().fill(Theme.paperDeep).offset(x: 4, y: -4)
-            Rectangle().fill(Color.white.opacity(0.6))
-                .background(Theme.paper)
-                .shadow(color: Theme.ink.opacity(0.10), radius: 4, y: 1)
-        }
     }
 }
 

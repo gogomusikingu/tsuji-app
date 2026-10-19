@@ -69,7 +69,7 @@ struct ContentView: View {
             Color.clear
             switch target {
             case .draw: if let bible { DrawView(bible: bible, journal: journal, lang: language) }
-            case .records: RecordsView(journal: journal, lang: language)
+            case .records: RecordsView(journal: journal, lang: language, bible: bible)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)

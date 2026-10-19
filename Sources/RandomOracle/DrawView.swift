@@ -20,7 +20,8 @@ struct DrawView: View {
     @State private var now = Date()
     @State private var sharing: JournalEntry?
     @State private var showShare = false
-    /// Today's verse stays folded away behind a button until the user chooses to open it again.
+    /// Today's verse stays folded away behind a button until the user chooses to read it again;
+    /// it folds away again when the user leaves this tab.
     @State private var showToday = false
     private let cooldown = Cooldown()
     private let ticker = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
@@ -101,8 +102,6 @@ struct DrawView: View {
                     Button { share(journal.entry(today.id)) } label: { Label(l.share, systemImage: "square.and.arrow.up") }
                         .buttonStyle(.plain).font(Theme.mincho(13)).foregroundStyle(Theme.shu)
                     Spacer()
-                    Button(l.done) { withAnimation(Fade.animation) { showToday = false } }
-                        .buttonStyle(InkButtonStyle())
                 }
                 Text(l.nextDraw(Cooldown.format(remaining)))
                     .font(Theme.mincho(12).monospacedDigit())

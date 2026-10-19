@@ -28,7 +28,7 @@ enum PreviewRenderer {
             r.scale = CGFloat(scale)
             if let tiff = r.nsImage?.tiffRepresentation, let rep = NSBitmapImageRep(data: tiff),
                let png = rep.representation(using: .png, properties: [:]) {
-                try? png.write(to: dir.appendingPathComponent("LaunchMark@\(scale)x.png"))
+                try? png.write(to: dir.appendingPathComponent("LaunchBook@\(scale)x.png"))
             }
         }
         for lang in AppLanguage.allCases {
