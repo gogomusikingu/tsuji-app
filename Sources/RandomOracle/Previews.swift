@@ -31,7 +31,9 @@ enum PreviewRenderer {
                 .frame(width: 640, height: 560).background(Theme.paper).foregroundStyle(Theme.ink), "idle-\(lang.rawValue)", dir)
             var shared = JournalEntry(verse: verse)
             shared.interpretation = lang == .ja ? "隠れずに、自分の考えをはっきり言えということ。" : "Speak plainly instead of hiding."
+            shared.keyword = lang == .ja ? "答えて" : "answered"
             shared.action = lang == .ja ? "明日の会議で反対意見を言う。" : "Raise my objection at tomorrow's meeting."
+            shared.outcome = lang == .ja ? "言ってみたら、案が一つ通った。" : "I spoke up, and one proposal went through."
             render(ShareCard(entry: shared, lang: lang), "share-\(lang.rawValue)", dir)
             render(StatsBar(stats: (12, 7, 3), lang: lang).padding(24).frame(width: 390).background(Theme.paper).foregroundStyle(Theme.ink), "stats-\(lang.rawValue)", dir)
             render(SplashView(lang: lang).frame(width: 390, height: 844), "splash-\(lang.rawValue)", dir)

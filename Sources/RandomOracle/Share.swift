@@ -20,8 +20,11 @@ struct ShareCard: View {
                 .frame(maxWidth: .infinity, alignment: .trailing)
             if includeReading && entry.hasReading {
                 VStack(alignment: .leading, spacing: 10) {
+                    if !entry.keyword.isEmpty { row(l.exWords, entry.keyword) }
                     if !entry.interpretation.isEmpty { row(l.exReading, entry.interpretation) }
                     if !entry.action.isEmpty { row(l.exAction, entry.action) }
+                    // Only filled in later from the journal, so it appears when sharing from there.
+                    if !entry.outcome.isEmpty { row(l.exOutcome, entry.outcome) }
                 }
                 .padding(.leading, 12)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -48,6 +51,7 @@ struct ShareCard: View {
         VStack(alignment: .leading, spacing: 3) {
             Text(label).font(Theme.mincho(10)).foregroundStyle(Theme.shu)
             Text(value).font(Theme.mincho(13)).lineSpacing(4).fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 

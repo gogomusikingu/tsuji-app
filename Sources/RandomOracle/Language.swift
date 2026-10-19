@@ -59,6 +59,7 @@ struct L10n {
     var exWords: String { t("目に止まった言葉", "Words") }
     var exReading: String { t("読み方", "Reading") }
     var exAction: String { t("行動", "Action") }
+    var exOutcome: String { t("その後", "Afterwards") }
     var guideTitle: String { t("書のひらき方", "How to open the book") }
     var poemSource: String { t("『万葉集』巻十一・二五〇六", "Man’yōshū, Book 11, No. 2506 (8th century Japan)") }
     var poemMeaning: String { t("言葉に霊が宿るという、いくつもの道が交わる辻で、夕暮れに行き交う人の言葉に問うてみた。答えははっきりと出た。あの人は、私に心を寄せるだろう。",

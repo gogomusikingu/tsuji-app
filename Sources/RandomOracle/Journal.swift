@@ -11,7 +11,7 @@ struct JournalEntry: Codable, Identifiable, Hashable {
 
     init(verse: Verse) { self.verse = verse }
 
-    var hasReading: Bool { !interpretation.isEmpty || !action.isEmpty }
+    var hasReading: Bool { !keyword.isEmpty || !interpretation.isEmpty || !action.isEmpty || !outcome.isEmpty }
 
     // Tolerates journals saved by older versions that lack newer fields.
     init(from decoder: Decoder) throws {
