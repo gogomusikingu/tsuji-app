@@ -22,51 +22,53 @@ enum Theme {
     }
 }
 
-/// The 辻 mark: an open book whose gutter splits into a Y-shaped fork in the road.
+/// The 辻 mark: an open book lying on a road; the road runs on past it and forks into two,
+/// each branch vanishing at its own point on the same (unseen) horizon. One white line on the page
+/// is the verse the book fell open at. Geometry is on a 1024 grid, scaled to 95% so the tips clear
+/// the iOS icon's rounded corners.
 struct TsujiMark: View {
     var ink: Color = Theme.ink
     var accent: Color = Theme.shu
+    var paper: Color = Theme.paper
 
     var body: some View {
         Canvas { ctx, size in
-            let s = min(size.width, size.height) / 100
-            func p(_ x: CGFloat, _ y: CGFloat) -> CGPoint { CGPoint(x: x * s, y: y * s) }
-            let line = StrokeStyle(lineWidth: 2.4 * s, lineCap: .round, lineJoin: .round)
+            let k = min(size.width, size.height) / 1024
+            ctx.translateBy(x: (size.width - 1024 * k) / 2, y: (size.height - 1024 * k) / 2)
+            ctx.scaleBy(x: k, y: k)
+            ctx.translateBy(x: 512, y: 512)
+            ctx.scaleBy(x: 0.95, y: 0.95)
+            ctx.translateBy(x: -512, y: -512)
 
-            // Pages: each one follows a branch of the fork on its inner edge.
-            var left = Path()
-            left.move(to: p(46, 60))
-            left.addLine(to: p(38, 24))
-            left.addQuadCurve(to: p(8, 26), control: p(22, 18))
-            left.addLine(to: p(8, 72))
-            left.addQuadCurve(to: p(46, 74), control: p(28, 66))
-            left.closeSubpath()
-            var right = Path()
-            right.move(to: p(54, 60))
-            right.addLine(to: p(62, 24))
-            right.addQuadCurve(to: p(92, 26), control: p(78, 18))
-            right.addLine(to: p(92, 72))
-            right.addQuadCurve(to: p(54, 74), control: p(72, 66))
-            right.closeSubpath()
-            ctx.stroke(left, with: .color(ink), style: line)
-            ctx.stroke(right, with: .color(ink), style: line)
-
-            // Lines of text on each page.
-            for (i, y) in [36.0, 46, 56].enumerated() {
-                var l = Path(); l.move(to: p(14, y)); l.addLine(to: p(36 - CGFloat(i) * 2 + 2, y - 1))
-                var r = Path(); r.move(to: p(86, y)); r.addLine(to: p(64 + CGFloat(i) * 2 - 2, y - 1))
-                ctx.stroke(l, with: .color(ink.opacity(0.35)), style: StrokeStyle(lineWidth: 1.4 * s, lineCap: .round))
-                ctx.stroke(r, with: .color(ink.opacity(0.35)), style: StrokeStyle(lineWidth: 1.4 * s, lineCap: .round))
+            let horizon: CGFloat = 110
+            let vp = CGPoint(x: 512, y: horizon)
+            // Point on the line from v through q at height y.
+            func onRay(_ v: CGPoint, _ q: CGPoint, _ y: CGFloat) -> CGPoint {
+                CGPoint(x: v.x + (q.x - v.x) * (y - v.y) / (q.y - v.y), y: y)
+            }
+            func shape(_ pts: [CGPoint]) -> Path {
+                var p = Path(); p.addLines(pts); p.closeSubpath(); return p
             }
 
-            // The fork: a road comes up from below and splits along the gutter.
-            var fork = Path()
-            fork.move(to: p(50, 96))
-            fork.addLine(to: p(50, 64))
-            fork.addLine(to: p(42, 26))
-            fork.move(to: p(50, 64))
-            fork.addLine(to: p(58, 26))
-            ctx.stroke(fork, with: .color(accent), style: StrokeStyle(lineWidth: 3.2 * s, lineCap: .round, lineJoin: .round))
+            // Road: the stem runs to the centre point; each branch to its own point, where it ends sharp.
+            let sl = CGPoint(x: 322, y: 900), sr = CGPoint(x: 702, y: 900)
+            let fl = onRay(vp, sl, 450), fr = onRay(vp, sr, 450)
+            let crotch = CGPoint(x: 512, y: 450 - (fr.x - fl.x) * 0.35)
+            // One outline, so no seam shows where the stem meets the branches.
+            ctx.fill(shape([sl, fl, CGPoint(x: 72, y: horizon), crotch, CGPoint(x: 952, y: horizon), fr, sr]), with: .color(accent))
+
+            // Book lying open on the road, its sides running to the same centre point.
+            for s in [-1.0, 1.0] as [CGFloat] {
+                let innerTop = CGPoint(x: 512 + s * 12, y: 620), outerTop = CGPoint(x: 512 + s * 260, y: 620)
+                ctx.fill(shape([innerTop, outerTop, onRay(vp, outerTop, 820), onRay(vp, innerTop, 820)]), with: .color(ink))
+            }
+
+            // The verse: one line on the right page, following the page's perspective.
+            let inner = onRay(vp, CGPoint(x: 524, y: 620), 720).x, outer = onRay(vp, CGPoint(x: 772, y: 620), 720).x
+            var verse = Path()
+            verse.move(to: CGPoint(x: inner + (outer - inner) * 0.14, y: 720))
+            verse.addLine(to: CGPoint(x: inner + (outer - inner) * 0.82, y: 720))
+            ctx.stroke(verse, with: .color(paper), style: StrokeStyle(lineWidth: 16, lineCap: .round))
         }
         .aspectRatio(1, contentMode: .fit)
     }

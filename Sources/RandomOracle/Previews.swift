@@ -15,8 +15,8 @@ enum PreviewRenderer {
         let verse = bible.verses.first { $0.book == "JOS" && $0.chapter == 22 && $0.verse == 21 }!
 
         render(TsujiMark().frame(width: 512, height: 512).background(Theme.paper), "mark", dir)
-        // App icon: 1024 px with no transparency (iOS requirement); the mark sits on paper with margin.
-        let icon = ImageRenderer(content: TsujiMark().padding(84).frame(width: 1024, height: 1024).background(Theme.paper))
+        // App icon: 1024 px with no transparency (iOS requirement); the mark carries its own margin.
+        let icon = ImageRenderer(content: TsujiMark().frame(width: 1024, height: 1024).background(Theme.paper))
         icon.scale = 1
         if let tiff = icon.nsImage?.tiffRepresentation, let rep = NSBitmapImageRep(data: tiff),
            let png = rep.representation(using: .png, properties: [:]) {
