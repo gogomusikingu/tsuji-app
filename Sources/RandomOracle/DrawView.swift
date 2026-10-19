@@ -23,8 +23,8 @@ struct DrawView: View {
     @State private var showContext = false
     @State private var showOthers = false
     @State private var now = Date()
+    /// The entry whose share card is open.
     @State private var sharing: JournalEntry?
-    @State private var showShare = false
     /// Today's verse stays folded away behind a button until the user chooses to read it again;
     /// it folds away again when the user leaves this tab.
     @State private var showToday = false
@@ -44,8 +44,8 @@ struct DrawView: View {
         .padding(Theme.screenPadding)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .onReceive(ticker) { now = $0 }
-        .fadeCover(isPresented: $showShare) {
-            if let sharing { ShareSheet(entry: sharing, lang: lang) { showShare = false } }
+        .fadeCover(item: $sharing) { entry in
+            ShareSheet(entry: entry, lang: lang) { sharing = nil }
         }
         #if DEBUG
         // Screenshot automation: TSUJI_AUTODRAW=1 opens the book right after launch.
@@ -175,7 +175,7 @@ struct DrawView: View {
                     ExampleCard(example: item.example, lang: lang, verse: FixedExamples.caption(item, lang))
                 }
             } else {
-                Button(l.showOthers) { withAnimation { showOthers = true } }
+                Button(l.showOthers) { withAnimation(Fade.animation) { showOthers = true } }
                     .buttonStyle(.plain).font(Theme.mincho(13)).foregroundStyle(Theme.shu)
             }
         }
@@ -210,7 +210,6 @@ struct DrawView: View {
     private func share(_ e: JournalEntry?) {
         guard let e else { return }
         sharing = e
-        showShare = true
     }
 
     private func begin() {
@@ -304,7 +303,7 @@ var body: some View {
             }
         }
         HStack {
-            Button(showContext ? l.hideContext : l.showContext) { withAnimation { showContext.toggle() } }
+            Button(showContext ? l.hideContext : l.showContext) { withAnimation(Fade.animation) { showContext.toggle() } }
                 .buttonStyle(.plain)
                 .font(Theme.mincho(11))
                 .foregroundStyle(Theme.shu)

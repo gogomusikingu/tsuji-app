@@ -58,7 +58,7 @@ struct ContentView: View {
             // day's verse. A tap skips it.
             for _ in 0..<45 where !skipSplash { try? await Task.sleep(for: .milliseconds(100)) }
             bible = await loaded
-            withAnimation(.easeInOut(duration: 1.0)) { showSplash = false }
+            withAnimation(Fade.animation) { showSplash = false }
             if !guideSeen {
                 try? await Task.sleep(for: .seconds(1.0))
                 showGuide = true

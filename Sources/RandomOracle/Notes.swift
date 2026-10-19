@@ -71,8 +71,8 @@ struct NotesSection: View {
 
     @State private var writing: NoteKind?
     @State private var draft = ""
-    @State private var striking: (note: Note, kind: NoteKind)?
-    @State private var showStrike = false
+    /// The line whose strike-through is being asked about.
+    @State private var striking: StrikeTarget?
     @FocusState private var focused: Bool
 
     var body: some View {
@@ -89,8 +89,8 @@ struct NotesSection: View {
                         NoteRow(note: note, lang: lang)
                             .contentShape(Rectangle())
                             .onTapGesture {
-                                guard !showStrike else { return }
-                                striking = (note, kind); showStrike = true
+                                guard striking == nil else { return }
+                                striking = StrikeTarget(note: note, kind: kind)
                             }
                     }
                     if writing == kind {
@@ -115,29 +115,29 @@ struct NotesSection: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .onAppear { if openFirst, writing == nil, let first = kinds.first { open(first) } }
+        // The first question is open from the start, but the keyboard waits for a tap: it must not
+        // rise over the verse the moment the page turns.
+        .onAppear { if openFirst, writing == nil, let first = kinds.first { open(first, focus: false) } }
         // When the next question appears, open it for writing straight away.
         .onChange(of: kinds) { old, new in if openFirst, new.count > old.count, let last = new.last { open(last) } }
-        .fadeCover(isPresented: $showStrike) {
-            if let striking {
-                StrikeSheet(note: striking.note, lang: lang) {
-                    showStrike = false
-                    // Let the question fade away before the line changes underneath it.
-                    DispatchQueue.main.asyncAfter(deadline: .now() + Fade.duration) {
-                        withAnimation(.easeInOut(duration: 1.0)) {
-                            journal.toggleStrike(striking.note.id, in: striking.kind, of: entryID)
-                        }
+        .fadeCover(item: $striking) { target in
+            StrikeSheet(note: target.note, lang: lang) {
+                striking = nil
+                // Let the question fade away before the line changes underneath it.
+                DispatchQueue.main.asyncAfter(deadline: .now() + Fade.duration) {
+                    withAnimation(.easeInOut(duration: 1.0)) {
+                        journal.toggleStrike(target.note.id, in: target.kind, of: entryID)
                     }
-                } onCancel: { showStrike = false }
-            }
+                }
+            } onCancel: { striking = nil }
         }
     }
 
-    private func open(_ kind: NoteKind) {
+    private func open(_ kind: NoteKind, focus: Bool = true) {
         if let writing, writing != kind, !draft.isEmpty { save(writing) }
         draft = ""
         withAnimation(Fade.animation) { writing = kind }
-        focused = true
+        if focus { focused = true }
     }
 
     private func save(_ kind: NoteKind) {
@@ -145,6 +145,13 @@ struct NotesSection: View {
         draft = ""
         withAnimation(Fade.animation) { writing = nil }
     }
+}
+
+/// A line picked for striking through or restoring, handed to the confirmation cover.
+struct StrikeTarget: Identifiable {
+    let note: Note
+    let kind: NoteKind
+    var id: UUID { note.id }
 }
 
 /// One line as it would look in a notebook: struck lines stay readable, and a line that has been
