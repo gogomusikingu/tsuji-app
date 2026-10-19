@@ -18,9 +18,14 @@ extension View {
 private struct FadeCover<C: View>: ViewModifier {
     @Binding var isPresented: Bool
     let cover: () -> C
-    /// Whether the cover is mounted; it stays mounted while fading out.
+    /// Whether the cover is in the view tree; it stays there while fading out.
     @State private var mounted = false
+    /// The cover has actually appeared on screen (the system presentation has finished).
+    @State private var ready = false
     @State private var visible = false
+    /// Touches are accepted only once fully faded in, so a quick double tap cannot hit a button
+    /// that is still invisible, or close the cover while it is still being presented.
+    @State private var interactive = false
 
     func body(content: Content) -> some View {
         content
@@ -36,24 +41,45 @@ private struct FadeCover<C: View>: ViewModifier {
 
     private var layer: some View {
         ZStack {
+            // Tapping the paper around the content closes it, so the cover can never trap the user.
             Theme.paper.opacity(0.94).ignoresSafeArea()
+                .onTapGesture { isPresented = false }
             cover()
         }
         .opacity(visible ? 1 : 0)
+        .allowsHitTesting(interactive)
         .preferredColorScheme(.light)
+        .onAppear {
+            ready = true
+            if isPresented { reveal() } else { unmount() }
+        }
+        .onDisappear { ready = false; visible = false; interactive = false }
     }
 
     private func fadeIn() {
-        // Mount without the system's slide, then dissolve in.
+        if mounted, ready { reveal(); return }
+        // Mount without the system's slide; onAppear then dissolves it in.
         var t = Transaction(); t.disablesAnimations = true
         withTransaction(t) { mounted = true }
-        DispatchQueue.main.async { withAnimation(Fade.animation) { visible = true } }
+    }
+
+    private func reveal() {
+        withAnimation(Fade.animation) { visible = true } completion: {
+            if isPresented { interactive = true }
+        }
     }
 
     private func fadeOut() {
+        interactive = false
+        // Still being presented: onAppear will see isPresented == false and unmount.
+        guard ready else { return }
         withAnimation(Fade.animation) { visible = false } completion: {
-            var t = Transaction(); t.disablesAnimations = true
-            withTransaction(t) { mounted = false }
+            if !isPresented { unmount() }
         }
+    }
+
+    private func unmount() {
+        var t = Transaction(); t.disablesAnimations = true
+        withTransaction(t) { mounted = false }
     }
 }

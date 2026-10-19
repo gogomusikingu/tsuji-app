@@ -39,8 +39,8 @@ struct L10n {
     var strike: String { t("線を引く", "Strike through") }
     var restore: String { t("線を戻す", "Restore") }
     var leaveAsIs: String { t("そのままにする", "Leave it") }
-    var todayAlreadyOpen: String { t("今日の書は、もうひらかれています。", "Today the book has already been opened.") }
-    var openToday: String { t("今日の一節をひらく", "Open today’s verse") }
+    var todayAlreadyOpen: String { t("今日の書は、もうひらかれました。", "Today the book has already been opened.") }
+    var openToday: String { t("今日の一節を読み返す", "Read today’s verse again") }
     func todayVerse(_ time: String) -> String { t("今日の一節　\(time) にひらいた", "Today’s verse · opened \(time)") }
     var done: String { t("書を閉じる", "Close the book") }
     var showContext: String { t("前後を読む", "Read around it") }

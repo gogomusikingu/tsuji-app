@@ -59,7 +59,10 @@ struct ContentView: View {
     }
 
     private func page(_ target: Tab) -> some View {
-        Group {
+        // A ZStack with a clear layer keeps the page full-size even while it has nothing to show yet
+        // (the text is still loading); an empty Group would collapse the whole window around it.
+        ZStack {
+            Color.clear
             switch target {
             case .draw: if let bible { DrawView(bible: bible, journal: journal, lang: language) }
             case .records: RecordsView(journal: journal, lang: language)
@@ -187,6 +190,7 @@ struct SplashView: View {
     var body: some View {
         let l = L10n(lang: lang)
         let shown = animated ? stage : 2
+        // Paper behind everything, edge to edge, independent of how the overlay is sized.
         GeometryReader { geo in
             ZStack {
                 Theme.paper
@@ -199,6 +203,8 @@ struct SplashView: View {
                 .position(x: geo.size.width / 2, y: geo.size.height / 2 + Self.markSize / 2 + 70)
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Theme.paper.ignoresSafeArea())
         .foregroundStyle(Theme.ink)
         .task {
             guard animated else { return }

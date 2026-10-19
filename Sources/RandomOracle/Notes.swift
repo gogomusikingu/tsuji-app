@@ -35,7 +35,7 @@ struct NotesDisclosure: View {
         let entry = journal.entry(entryID)
         VStack(alignment: .leading, spacing: 14) {
             Button {
-                withAnimation(.easeInOut(duration: 0.25)) { expanded.toggle() }
+                withAnimation(Fade.animation) { expanded.toggle() }
             } label: {
                 HStack(spacing: 6) {
                     Text(l.writings(entry?.noteCount ?? 0)).font(Theme.mincho(14))
@@ -84,7 +84,10 @@ struct NotesSection: View {
                     ForEach(entry?.notes(kind) ?? []) { note in
                         NoteRow(note: note, lang: lang)
                             .contentShape(Rectangle())
-                            .onTapGesture { striking = (note, kind); showStrike = true }
+                            .onTapGesture {
+                                guard !showStrike else { return }
+                                striking = (note, kind); showStrike = true
+                            }
                     }
                     if writing == kind {
                         HStack(alignment: .bottom, spacing: 8) {

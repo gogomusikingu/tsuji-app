@@ -12,6 +12,8 @@ struct TsujiApp: App {
     var body: some Scene {
         WindowGroup("辻") {
             ContentView()
+                // No white from the window itself, ever: the whole window is paper.
+                .background(Theme.paper.ignoresSafeArea())
                 #if os(macOS)
                 .frame(minWidth: 520, minHeight: 640)
                 #endif
