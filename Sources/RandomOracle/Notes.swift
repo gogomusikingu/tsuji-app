@@ -56,7 +56,7 @@ struct NotesDisclosure: View {
 }
 
 /// The questions with everything written under each. Lines can be added at any time and
-/// struck through (or restored) by a long press, but never edited or removed.
+/// struck through (or restored) by tapping them, but never edited or removed.
 struct NotesSection: View {
     let entryID: UUID
     @ObservedObject var journal: Journal
@@ -74,13 +74,16 @@ struct NotesSection: View {
         let l = L10n(lang: lang)
         let entry = journal.entry(entryID)
         VStack(alignment: .leading, spacing: 18) {
+            if entry?.noteCount ?? 0 > 0 {
+                Text(l.strikeHint).font(Theme.mincho(10)).foregroundStyle(Theme.inkFaint)
+            }
             ForEach(kinds, id: \.self) { kind in
                 VStack(alignment: .leading, spacing: 8) {
                     Text(kind.question(l)).font(Theme.mincho(14))
                     ForEach(entry?.notes(kind) ?? []) { note in
                         NoteRow(note: note, lang: lang)
                             .contentShape(Rectangle())
-                            .onLongPressGesture { striking = (note, kind) }
+                            .onTapGesture { striking = (note, kind) }
                     }
                     if writing == kind {
                         HStack(alignment: .bottom, spacing: 8) {

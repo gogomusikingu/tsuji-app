@@ -12,7 +12,6 @@ struct RecordsView: View {
         } else {
             ScrollView {
                 LazyVStack(spacing: 16) {
-                    StatsBar(stats: journal.stats, lang: lang)
                     ForEach(journal.entries) { entry in
                         EntryRow(entry: entry, journal: journal, lang: lang)
                     }
@@ -20,39 +19,6 @@ struct RecordsView: View {
                 .padding(24)
             }
         }
-    }
-}
-
-/// A running tally that shows the book as a tool for acting, not a fortune.
-struct StatsBar: View {
-    let stats: (opened: Int, decided: Int, reflected: Int)
-    let lang: AppLanguage
-
-    var body: some View {
-        let l = L10n(lang: lang)
-        HStack(spacing: 0) {
-            cell(stats.opened, l.statsOpened, l)
-            divider
-            cell(stats.decided, l.statsDecided, l)
-            divider
-            cell(stats.reflected, l.statsReflected, l)
-        }
-        .padding(.vertical, 16)
-        .frame(maxWidth: .infinity)
-        .background(Rectangle().fill(Theme.paperDeep.opacity(0.6)))
-    }
-
-    private var divider: some View { Rectangle().fill(Theme.ink.opacity(0.12)).frame(width: 1, height: 36) }
-
-    private func cell(_ n: Int, _ label: String, _ l: L10n) -> some View {
-        VStack(spacing: 4) {
-            HStack(alignment: .firstTextBaseline, spacing: 2) {
-                Text("\(n)").font(Theme.mincho(24, bold: true).monospacedDigit())
-                Text(l.statsUnit).font(Theme.mincho(11))
-            }
-            Text(label).font(Theme.mincho(11)).foregroundStyle(Theme.inkFaint)
-        }
-        .frame(maxWidth: .infinity)
     }
 }
 

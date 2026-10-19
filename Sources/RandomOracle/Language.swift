@@ -14,27 +14,8 @@ struct L10n {
     var appName: String { t("辻", "Sortes") }
     var tagline: String { t("迷ったら、偶然の一節に聞く", "In doubt? Ask a chance verse") }
     var tabDraw: String { t("ひらく", "Open") }
-    var tabMenu: String { t("メニュー", "Menu") }
-    var menuIntro: String { t("メニューが決められないときは、写真を撮るだけ。\n書かれた品から、ひとつを無作為に選びます。",
-                              "Can’t choose from the menu? Just take a photo.\nOne dish is picked at random.") }
-    var menuChoosePhoto: String { t("メニューの写真を選ぶ", "Choose a menu photo") }
-    var menuTakePhoto: String { t("メニューを撮る", "Take a photo") }
-    var menuFromLibrary: String { t("写真から選ぶ", "Choose from Photos") }
     var followupTitle: String { t("辻", "Sortes") }
     var followupBody: String { t("数日前に書をひらいた迷いは、その後どうなりましたか？", "A few days ago you opened the book. How did it turn out?") }
-    var menuDropHint: String { t("写真をここにドラッグしても読み込めます", "You can also drop a photo here") }
-    var menuReading: String { t("文字を読み取っています…", "Reading the menu…") }
-    var menuCheck: String { t("読み取った品です。料理でないものはチェックを外してください。", "Dishes found. Untick anything that isn’t a dish.") }
-    var menuAdd: String { t("品を追加", "Add a dish") }
-    var menuAddButton: String { t("追加", "Add") }
-    var menuDecide: String { t("ひとつ選ぶ", "Pick one") }
-    var menuStartOver: String { t("別の写真にする", "Use another photo") }
-    var menuResultLead: String { t("今日は、これにしましょう。", "Today, go with this.") }
-    var menuAgain: String { t("もう一度選ぶ", "Pick again") }
-    var menuBack: String { t("一覧に戻る", "Back to list") }
-    var menuLoadFailed: String { t("画像を読み込めませんでした。", "Couldn’t open the image.") }
-    var menuNoText: String { t("文字を読み取れませんでした。明るく、正面から撮った写真で試してください。",
-                               "No text found. Try a brighter photo taken straight on.") }
     var tabRecords: String { t("記録", "Journal") }
     var intro: String { t("迷いをひとつ、心に思い浮かべてください。\n書は無作為にひらかれます。\n引き直しはできません。",
                           "Hold one dilemma in your mind.\nThe book opens at random.\nThere is no second draw.") }
@@ -50,6 +31,7 @@ struct L10n {
     var write: String { t("＋ 書き込む", "+ Write") }
     var writePlaceholder: String { t("書き込む…", "Write…") }
     var keep: String { t("残す", "Keep") }
+    var strikeHint: String { t("書き込んだ行を押すと、線を引けます。", "Tap a line to strike it through.") }
     func struckAt(_ time: String) -> String { t("線 \(time)", "struck \(time)") }
     var strikeTitle: String { t("考えが、変わりましたか。", "Has your mind changed?") }
     var strikeBody: String { t("線を引いても、文字は消えずに残ります。", "A line through it leaves the words in place.") }
@@ -84,10 +66,6 @@ struct L10n {
     var shareTitle: String { t("この一節をシェア", "Share this verse") }
     var shareIncludeReading: String { t("自分の読み方も載せる", "Include my reading") }
     var cancel: String { t("やめる", "Cancel") }
-    var statsOpened: String { t("ひらいた", "Opened") }
-    var statsDecided: String { t("行動を決めた", "Decided") }
-    var statsReflected: String { t("振り返った", "Looked back") }
-    var statsUnit: String { t("回", "") }
     var noRecords: String { t("まだ記録はありません", "No entries yet") }
     var disclaimer: String { t("最終的な判断は、あなた自身が行ってください。", "The final decision is always yours.") }
     func nextDraw(_ remaining: String) -> String { t("次に書をひらけるまで \(remaining)", "Next opening in \(remaining)") }

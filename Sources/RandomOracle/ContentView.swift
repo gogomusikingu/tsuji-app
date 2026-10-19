@@ -7,9 +7,10 @@ struct ContentView: View {
     @State private var showGuide = false
     @State private var tab: Tab = .draw
     @State private var showSplash = true
-    private let bible = Bible.bundled()
+    /// Loaded off the main thread while the splash is up, so launch does not stall on 31k verses.
+    @State private var bible: Bible?
 
-    enum Tab { case draw, menu, records }
+    enum Tab { case draw, records }
 
     var body: some View {
         let l = L10n(lang: language)
@@ -20,7 +21,6 @@ struct ContentView: View {
             // iPhone: the familiar bottom tab bar.
             TabView(selection: $tab) {
                 page(.draw).tabItem { Label(l.tabDraw, systemImage: "book") }.tag(Tab.draw)
-                page(.menu).tabItem { Label(l.tabMenu, systemImage: "menucard") }.tag(Tab.menu)
                 page(.records).tabItem { Label(l.tabRecords, systemImage: "list.bullet") }.tag(Tab.records)
             }
             #else
@@ -36,13 +36,16 @@ struct ContentView: View {
                 SplashView(lang: language).transition(.opacity)
             }
         }
-        .onAppear {
-            // Show the name and mark briefly, then reveal the app (and the guide on first run).
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.6) {
-                withAnimation(.easeOut(duration: 0.6)) { showSplash = false }
-                if !guideSeen {
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { showGuide = true }
-                }
+        .task {
+            // Show the name and mark for a moment while the text loads, then reveal the app
+            // (and the guide on first run).
+            async let loaded = Task.detached(priority: .userInitiated) { Bible.shared }.value
+            try? await Task.sleep(for: .seconds(1.2))
+            bible = await loaded
+            withAnimation(.easeOut(duration: 0.6)) { showSplash = false }
+            if !guideSeen {
+                try? await Task.sleep(for: .seconds(0.6))
+                showGuide = true
             }
         }
         .sheet(isPresented: $showGuide) {
@@ -53,8 +56,7 @@ struct ContentView: View {
     private func page(_ target: Tab) -> some View {
         Group {
             switch target {
-            case .draw: DrawView(bible: bible, journal: journal, lang: language)
-            case .menu: MenuView(lang: language)
+            case .draw: if let bible { DrawView(bible: bible, journal: journal, lang: language) }
             case .records: RecordsView(journal: journal, lang: language)
             }
         }
@@ -77,7 +79,6 @@ struct ContentView: View {
             Spacer()
             #if os(macOS)
             tabButton(l.tabDraw, .draw)
-            tabButton(l.tabMenu, .menu)
             tabButton(l.tabRecords, .records)
             Divider().frame(height: 16)
             #endif

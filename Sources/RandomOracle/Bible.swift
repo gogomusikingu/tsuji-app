@@ -26,6 +26,9 @@ final class Bible {
         }
     }
 
+    /// Parsed once on first use (31k verses, ~9 MB); the app starts this off the main thread at launch.
+    static let shared = bundled()
+
     static func bundled() -> Bible {
         guard let url = Platform.resourceBundle.url(forResource: "bible", withExtension: "tsv"),
               let tsv = try? String(contentsOf: url, encoding: .utf8) else {

@@ -11,7 +11,7 @@ enum PreviewRenderer {
         guard let i = args.firstIndex(of: "--render-previews"), i + 1 < args.count else { return false }
         let dir = URL(fileURLWithPath: args[i + 1], isDirectory: true)
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-        let bible = Bible.bundled()
+        let bible = Bible.shared
         let verse = bible.verses.first { $0.book == "JOS" && $0.chapter == 22 && $0.verse == 21 }!
 
         render(TsujiMark().frame(width: 512, height: 512).background(Theme.paper), "mark", dir)
@@ -61,7 +61,6 @@ enum PreviewRenderer {
                                        strikes: Array(repeating: Date(), count: n)), lang: lang)
                 }
             }.padding(24).frame(width: 390).background(Theme.paper).foregroundStyle(Theme.ink), "wear-\(lang.rawValue)", dir)
-            render(StatsBar(stats: (12, 7, 3), lang: lang).padding(24).frame(width: 390).background(Theme.paper).foregroundStyle(Theme.ink), "stats-\(lang.rawValue)", dir)
             render(SplashView(lang: lang).frame(width: 390, height: 844), "splash-\(lang.rawValue)", dir)
             render(GuideContent(lang: lang).padding(32).frame(width: 580).background(Theme.paper).foregroundStyle(Theme.ink), "guide-\(lang.rawValue)", dir)
         }

@@ -123,13 +123,6 @@ final class Journal: ObservableObject {
         }
     }
 
-    /// How often the book was opened, how often it led to a decision, and how often the user looked back.
-    var stats: (opened: Int, decided: Int, reflected: Int) {
-        (entries.count,
-         entries.filter { !$0.action.isEmpty }.count,
-         entries.filter { !$0.outcome.isEmpty }.count)
-    }
-
     func entry(_ id: UUID) -> JournalEntry? { entries.first { $0.id == id } }
 
     func upsert(_ entry: JournalEntry) {
