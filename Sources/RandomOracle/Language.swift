@@ -12,7 +12,7 @@ struct L10n {
     private func t(_ ja: String, _ en: String) -> String { lang == .ja ? ja : en }
 
     var appName: String { t("辻", "Sortes") }
-    var tagline: String { t("迷ったら、偶然の一節に聞く", "In doubt? Ask a chance verse") }
+    var tagline: String { t("迷ったら、偶然の一節に問う", "In doubt? Ask a chance verse") }
     var tabDraw: String { t("ひらく", "Open") }
     var followupTitle: String { t("辻", "Sortes") }
     var followupBody: String { t("数日前に書をひらいた迷いは、その後どうなりましたか？", "A few days ago you opened the book. How did it turn out?") }
