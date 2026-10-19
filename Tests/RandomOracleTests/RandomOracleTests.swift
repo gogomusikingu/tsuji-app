@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import Testing
 @testable import RandomOracle
@@ -59,4 +60,35 @@ import Testing
             #expect(bible.verses.contains { $0.text(lang) == item.verse }, "\(item.ref)")
         }
     }
+}
+
+@Test func menuCandidatesDropPricesAndNoise() {
+    let lines = ["お品書き", "醤油ラーメン ¥850", "味噌ラーメン……980円", "餃子（6個） 450円", "1,200", "※価格は税込です",
+                 "醤油ラーメン ¥850", "Coffee $4.50", "A"]
+    let c = MenuPicker.candidates(from: lines)
+    #expect(c.contains("醤油ラーメン"))
+    #expect(c.contains("味噌ラーメン"))
+    #expect(c.contains("餃子（6個）"))
+    #expect(c.contains("Coffee"))
+    #expect(!c.contains("1,200"))
+    #expect(c.filter { $0 == "醤油ラーメン" }.count == 1)
+    #expect(!c.contains("A"))
+}
+
+@Test func menuOCRReadsRenderedMenu() async throws {
+    // Draw a small Japanese menu and run the real on-device text recognition on it.
+    let image = NSImage(size: NSSize(width: 600, height: 400), flipped: true) { rect in
+        NSColor.white.setFill(); rect.fill()
+        let font = NSFont(name: "HiraKakuProN-W6", size: 30) ?? .systemFont(ofSize: 30)
+        for (i, line) in ["醤油ラーメン　850円", "味噌ラーメン　950円", "チャーハン　700円", "コーヒー　400円"].enumerated() {
+            (line as NSString).draw(at: NSPoint(x: 40, y: 40 + i * 80), withAttributes: [.font: font, .foregroundColor: NSColor.black])
+        }
+        return true
+    }
+    let cg = try #require(image.cgImage(forProposedRect: nil, context: nil, hints: nil))
+    let lines = try await MenuPicker.recognizeLines(in: cg)
+    let c = MenuPicker.candidates(from: lines)
+    #expect(c.contains("醤油ラーメン"), "\(lines)")
+    #expect(c.contains("コーヒー"), "\(lines)")
+    #expect(c.count == 4, "\(c)")
 }

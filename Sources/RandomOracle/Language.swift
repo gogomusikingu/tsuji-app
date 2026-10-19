@@ -14,6 +14,23 @@ struct L10n {
     var appName: String { t("辻", "Sortes") }
     var tagline: String { t("迷ったら、書をひらく", "Open the book when in doubt") }
     var tabDraw: String { t("ひらく", "Open") }
+    var tabMenu: String { t("メニュー", "Menu") }
+    var menuIntro: String { t("メニューが決められないときは、写真を撮るだけ。\n書かれた品から、ひとつを無作為に選びます。",
+                              "Can’t choose from the menu? Just take a photo.\nOne dish is picked at random.") }
+    var menuChoosePhoto: String { t("メニューの写真を選ぶ", "Choose a menu photo") }
+    var menuDropHint: String { t("写真をここにドラッグしても読み込めます", "You can also drop a photo here") }
+    var menuReading: String { t("文字を読み取っています…", "Reading the menu…") }
+    var menuCheck: String { t("読み取った品です。料理でないものはチェックを外してください。", "Dishes found. Untick anything that isn’t a dish.") }
+    var menuAdd: String { t("品を追加", "Add a dish") }
+    var menuAddButton: String { t("追加", "Add") }
+    var menuDecide: String { t("ひとつ選ぶ", "Pick one") }
+    var menuStartOver: String { t("別の写真にする", "Use another photo") }
+    var menuResultLead: String { t("今日は、これにしましょう。", "Today, go with this.") }
+    var menuAgain: String { t("もう一度選ぶ", "Pick again") }
+    var menuBack: String { t("一覧に戻る", "Back to list") }
+    var menuLoadFailed: String { t("画像を読み込めませんでした。", "Couldn’t open the image.") }
+    var menuNoText: String { t("文字を読み取れませんでした。明るく、正面から撮った写真で試してください。",
+                               "No text found. Try a brighter photo taken straight on.") }
     var tabRecords: String { t("記録", "Journal") }
     var intro: String { t("迷いをひとつ、心に思い浮かべてください。\n書は無作為にひらかれます。引き直しはできません。",
                           "Hold one dilemma in your mind.\nThe book opens at random. There is no second draw.") }

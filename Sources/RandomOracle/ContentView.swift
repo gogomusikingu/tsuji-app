@@ -9,7 +9,7 @@ struct ContentView: View {
     @State private var showSplash = true
     private let bible = Bible.bundled()
 
-    enum Tab { case draw, records }
+    enum Tab { case draw, menu, records }
 
     var body: some View {
         let l = L10n(lang: language)
@@ -18,6 +18,7 @@ struct ContentView: View {
             Rectangle().fill(Theme.ink.opacity(0.15)).frame(height: 1)
             switch tab {
             case .draw: DrawView(bible: bible, journal: journal, lang: language)
+            case .menu: MenuView(lang: language)
             case .records: RecordsView(journal: journal, lang: language)
             }
         }
@@ -53,6 +54,7 @@ struct ContentView: View {
             }
             Spacer()
             tabButton(l.tabDraw, .draw)
+            tabButton(l.tabMenu, .menu)
             tabButton(l.tabRecords, .records)
             Divider().frame(height: 16)
             Button(language == .ja ? "EN" : "日本語") { language = language == .ja ? .en : .ja }

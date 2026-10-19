@@ -39,6 +39,10 @@
 
 ### 3.4 メニューを決める（別機能）
 - メニューを撮影 → 端末の中で文字を認識 → 1品を無作為に選ぶ。回数制限なし
+- 読み取った行から値段（円・¥・$）、税込表記、点線、数字だけの行を除き、重複を除いて候補にする（`MenuPicker.swift`）
+- 候補は一覧で確認し、料理でないものはチェックを外せる。手入力で追加もできる
+- Mac 試作版では写真ファイルを選ぶかドラッグで読み込む。iPhone 版ではカメラで撮影する
+- お試し用の画像: `samples/menu_sample.png`
 
 ## 4. 技術方針
 - Swift / SwiftUI（iPhone 専用ネイティブ）
@@ -51,7 +55,7 @@
 - Xcode なしで動く Mac アプリ（Swift Package / SwiftUI）。iPhone 版にコードを流用する前提
 - 実装済み: 3.1 書を開く（3秒の集中→ページをめくる動き→振動）、引き直し防止（1時間）、
   3.2 振り返り（直後の解釈・行動、記録タブで「その後どうなった？」を後から記入）、日本語/英語切替
-- 未実装: 3.2 の数日後の通知、3.3 シェア、3.4 メニュー
+- 未実装: 3.2 の数日後の通知、3.3 シェア（3.4 メニューは実装済み）
 - デザイン反映済み（7.4）: `Theme.swift` に配色（生成り #F5F0E6・墨 #2B2927・朱 #C64730）、明朝体（ヒラギノ明朝）、
   辻マーク（本の綴じ目が Y 字の分かれ道）を定義。ヘッダーに「辻 / 迷ったら、書をひらく」、一節の頁に朱の栞、
   初回説明に万葉集の歌と辻占・古代ローマの由来を表示。英語版の表示名は Sortes
@@ -68,11 +72,12 @@
 ### 4.2 ディレクトリ構成
 ```
 Package.swift
-Sources/RandomOracle/        アプリ本体（App / ContentView / DrawView / RecordsView / Bible / Journal / Cooldown / Language / Examples / Theme / Previews）
+Sources/RandomOracle/        アプリ本体（App / ContentView / DrawView / MenuView / MenuPicker / RecordsView / Bible / Journal / Cooldown / Language / Examples / Theme / Previews）
 Sources/RandomOracle/Resources/bible.tsv   聖書本文（書・章・節・日本語・英語）31,098節
 Tests/RandomOracleTests/     テスト
 tools/build_bible.py         eBible.org のデータから bible.tsv を作る
 tools/run_mac.sh             Mac 試作版のビルドと起動
+samples/menu_sample.png      メニュー機能のお試し用画像
 試作版を起動.command          ダブルクリック用の起動ショートカット（待ち時間10秒）
 ```
 
@@ -136,7 +141,8 @@ tools/run_mac.sh             Mac 試作版のビルドと起動
 - アイコンの詳細（試作版の辻マークをたたき台にする）
 
 ## 9. TODO
-- [ ] Xcode をインストールする（ユーザー作業: Mac の App Store から「Xcode」を入手）
+- [x] Xcode をインストールする（Xcode 27.1。xcode-select は Command Line Tools のままなので、使うときは `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer` を指定）
+- [ ] iOS シミュレーターを入れる（約8GB のダウンロード。Wi-Fi 環境で）
 - [ ] Apple Developer Program に登録する（公開前。年 99 ドル）
 - [ ] 日本語訳を決める（フリーダム・バイブルの訳の質を読んで確認／口語訳の利用条件を確認）
 - [x] Mac 試作版: 3.1 書を開く、3.2 振り返り（直後・後から記入）、日本語/英語切替
@@ -144,7 +150,8 @@ tools/run_mac.sh             Mac 試作版のビルドと起動
 - [x] アプリ名とデザインの方向性を決める
 - [x] 試作版の画面に、名前・配色・初回説明（万葉集の歌）を反映する
 - [ ] デザインを実際に見て確認する（ユーザー作業）
-- [ ] 試作の続き: 3.4 メニュー（入口として優先）→ iPhone 版へ移植（数日後の通知を含む）→ 3.3 シェア（後回し）
+- [x] Mac 試作版: 3.4 メニュー
+- [ ] iPhone 版へ移植（カメラ撮影、数日後の通知、SwiftData、String Catalog を含む）→ 3.3 シェア（後回し）
 
 ## 10. 変更履歴
 - 2026-10-19 方針相談をもとに初版を作成（日本語・英語の2言語対応を含む）
@@ -156,3 +163,4 @@ tools/run_mac.sh             Mac 試作版のビルドと起動
 - 2026-10-19 後から追加する書の候補に和歌集（百人一首・万葉集・古今和歌集）を追加
 - 2026-10-19 試作版にデザインを反映（配色・明朝体・辻マーク・栞・万葉集の初回説明）
 - 2026-10-19 起動画面（アプリ名とマーク）を追加
+- 2026-10-19 メニュー機能（写真から文字を読み取り、1品を無作為に選ぶ）を追加
