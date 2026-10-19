@@ -1,4 +1,5 @@
 import AppKit
+import CoreText
 import Foundation
 import Testing
 @testable import RandomOracle
@@ -106,4 +107,10 @@ import Testing
     }
     #expect(journal.stats == (4, 2, 1))
     #expect(!JournalEntry(verse: verse).hasReading)
+}
+
+@Test func verseFontIsBundledAndLoads() throws {
+    let url = try #require(Bundle.module.url(forResource: "ShipporiMincho-Regular", withExtension: "ttf"))
+    CTFontManagerRegisterFontsForURL(url as CFURL, .process, nil)
+    #expect(NSFont(name: "ShipporiMincho-Regular", size: 12) != nil)
 }

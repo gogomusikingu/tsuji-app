@@ -1,3 +1,4 @@
+import CoreText
 import SwiftUI
 
 /// "The look of a Japanese book": unbleached paper, sumi ink, Mincho type, one vermilion accent.
@@ -21,6 +22,19 @@ enum Theme {
     static func mincho(_ size: CGFloat, bold: Bool = false) -> Font {
         .custom(bold ? "HiraMinProN-W6" : "HiraMinProN-W3", size: size)
     }
+
+    /// Quoted verses only: Shippori Mincho (bundled, SIL OFL 1.1), modelled on Meiji-era metal type,
+    /// so the drawn verse looks like a page of an old book. Falls back to Hiragino if it fails to load.
+    static func verse(_ size: CGFloat) -> Font {
+        _ = registerVerseFont
+        return .custom("ShipporiMincho-Regular", size: size)
+    }
+
+    private static let registerVerseFont: Void = {
+        if let url = Platform.resourceBundle.url(forResource: "ShipporiMincho-Regular", withExtension: "ttf") {
+            CTFontManagerRegisterFontsForURL(url as CFURL, .process, nil)
+        }
+    }()
 }
 
 /// The 辻 mark: an open book lying on a road; the road runs on past it and forks into two,

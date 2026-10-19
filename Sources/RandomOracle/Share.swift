@@ -11,7 +11,7 @@ struct ShareCard: View {
         let l = L10n(lang: lang)
         VStack(alignment: .leading, spacing: 22) {
             Text(entry.verse.text(lang))
-                .font(Theme.mincho(20))
+                .font(Theme.verse(20))
                 .lineSpacing(10)
                 .fixedSize(horizontal: false, vertical: true)
             Text(entry.verse.reference(lang))

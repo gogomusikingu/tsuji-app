@@ -181,7 +181,7 @@ struct ExampleCard: View {
     var body: some View {
         let l = L10n(lang: lang)
         VStack(alignment: .leading, spacing: 6) {
-            if let verse { Text(verse).font(Theme.mincho(13)).lineSpacing(4).fixedSize(horizontal: false, vertical: true).padding(.bottom, 4) }
+            if let verse { Text(verse).font(Theme.verse(13)).lineSpacing(4).fixedSize(horizontal: false, vertical: true).padding(.bottom, 4) }
             row(l.exWorry, example.worry)
             row(l.exWords, example.words)
             row(l.exReading, example.reading)
@@ -220,7 +220,7 @@ var body: some View {
                     Text("\(v.verse)").font(Theme.mincho(10)).foregroundStyle(Theme.inkFaint)
                 }
                 Text(v.text(lang))
-                    .font(Theme.mincho(isDrawn ? 21 : 13))
+                    .font(Theme.verse(isDrawn ? 21 : 13))
                     .foregroundStyle(isDrawn ? Theme.ink : Theme.inkFaint)
                     .lineSpacing(isDrawn ? 12 : 4)
                     .textSelection(.enabled)

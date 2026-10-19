@@ -99,6 +99,7 @@
 Package.swift
 Sources/RandomOracle/        アプリ本体（App / ContentView / DrawView / MenuView / MenuPicker / RecordsView / Share / Bible / Journal / Cooldown / Language / Examples / Theme / Previews）
 Sources/RandomOracle/Resources/bible.tsv   聖書本文（書・章・節・日本語・英語）31,098節
+Sources/RandomOracle/Resources/ShipporiMincho-*  引用文用の字体（しっぽり明朝 Regular）とそのライセンス（SIL OFL 1.1）
 Tests/RandomOracleTests/     テスト
 tools/build_bible.py         eBible.org のデータから bible.tsv を作る
 tools/run_mac.sh             Mac 試作版のビルドと起動
@@ -115,6 +116,8 @@ samples/menu_sample.png      メニュー機能のお試し用画像
   （どちらかが空の5節は除外）。フリーダム・バイブルは「翻訳の草案」とされており、訳の質は要確認
 - 日本語 他の候補: 口語訳聖書（1955年。日本聖書協会へ確認が必要）、新改訳新約聖書1965年版（パブリックドメイン。新約のみ）、
   文語訳聖書（著作権切れ。読みにくい）
+- 字体: しっぽり明朝（SIL Open Font License 1.1。無料・商用可・アプリへの同梱可。ライセンス文を同梱する義務あり）。
+  入手元は Google Fonts のリポジトリ（github.com/google/fonts の ofl/shipporimincho）
 - アエネーイス: 後から追加。英語の著作権切れの訳から独自に和訳
 - 和歌集（後から追加する候補。歌占の伝統と「辻」の名前に合う）: 百人一首（100首・入口向き）→ 万葉集（約4,500首）で広げる。
   古今和歌集（約1,100首）も候補。原文は著作権切れだが電子テキストの利用条件は要確認。現代語訳は AI 下訳＋自分たちで整える。
@@ -166,6 +169,8 @@ samples/menu_sample.png      メニュー機能のお試し用画像
   - 右ページに朱の線を1本だけ入れ、「ひらいた一節」が浮かぶことを表す。差し色の朱はこの1本だけにする
     （道を朱にすると主張が強く、角のある虫のように見えたため）
   - iPhone の角丸で先端が欠けないよう、全体を95%に縮めて余白を取る。図形は `Theme.swift` の `TsujiMark`
+- 字体: 引用文（一節・前後の節・例の引用・記録・シェア画像）は「しっぽり明朝」（明治期の活字がもと。アプリに同梱）、
+  それ以外はヒラギノ明朝。`Theme.verse()` / `Theme.mincho()`
 - 画面: ミニマル・モダン。生成り色の背景、墨色の文字、本文は明朝体、差し色は朱1色。紫・金・星・水晶玉・羊皮紙・十字架は使わない
 - メニュー機能（Mac / iPhone 版）も同じ世界観にそろえる
 
@@ -214,3 +219,4 @@ samples/menu_sample.png      メニュー機能のお試し用画像
 - 2026-10-19 シェア画像に「目に止まった言葉」と「その後」も載せるように変更
 - 2026-10-19 書をひらく前の説明文で「引き直しはできません。」を独立した行にした
 - 2026-10-19 アイコンの道を土色の灰にし、朱は一節の線だけにした
+- 2026-10-19 引用文の字体をしっぽり明朝に変更（同梱）

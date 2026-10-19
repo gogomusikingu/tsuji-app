@@ -7,7 +7,11 @@ let package = Package(
     targets: [
         .executableTarget(
             name: "RandomOracle",
-            resources: [.copy("Resources/bible.tsv")],
+            resources: [
+                .copy("Resources/bible.tsv"),
+                .copy("Resources/ShipporiMincho-Regular.ttf"),
+                .copy("Resources/ShipporiMincho-OFL.txt"),
+            ],
             swiftSettings: [.swiftLanguageMode(.v5)]
         ),
         .testTarget(

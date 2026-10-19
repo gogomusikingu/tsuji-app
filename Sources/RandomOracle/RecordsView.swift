@@ -73,7 +73,7 @@ private struct EntryRow: View {
                     .buttonStyle(.plain).foregroundStyle(Theme.shu)
                     .accessibilityLabel(l.share)
             }
-            Text(entry.verse.text(lang)).font(Theme.mincho(16)).lineSpacing(6)
+            Text(entry.verse.text(lang)).font(Theme.verse(16)).lineSpacing(6)
             Text(entry.verse.reference(lang)).font(Theme.mincho(11)).foregroundStyle(Theme.inkFaint)
             TextField(l.keyword, text: $entry.keyword, axis: .vertical)
             TextField(l.interpretation, text: $entry.interpretation, axis: .vertical)
