@@ -15,6 +15,3 @@ build/
 .env
 *.secret
 *credentials*
-
-# Personal reference materials
-99 others/
