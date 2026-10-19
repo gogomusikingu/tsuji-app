@@ -31,7 +31,7 @@ import Testing
     let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
     var entry = JournalEntry(verse: Verse(book: "GEN", chapter: 1, verse: 1, ja: "a", en: "b"))
     Journal(directory: dir).upsert(entry)
-    entry.outcome = "went well"
+    entry.write("went well", to: .outcome)
     Journal(directory: dir).upsert(entry)
     let reloaded = Journal(directory: dir)
     #expect(reloaded.entries.count == 1)
@@ -101,8 +101,8 @@ import Testing
     let verse = Bible.bundled().verses[0]
     for i in 0..<4 {
         var e = JournalEntry(verse: verse)
-        if i < 2 { e.action = "do it" }
-        if i == 0 { e.outcome = "went well" }
+        if i < 2 { e.write("do it", to: .action) }
+        if i == 0 { e.write("went well", to: .outcome) }
         journal.upsert(e)
     }
     #expect(journal.stats == (4, 2, 1))
@@ -113,4 +113,38 @@ import Testing
     let url = try #require(Bundle.module.url(forResource: "ShipporiMincho-Regular", withExtension: "ttf"))
     CTFontManagerRegisterFontsForURL(url as CFURL, .process, nil)
     #expect(NSFont(name: "ShipporiMincho-Regular", size: 12) != nil)
+}
+
+@Test func notesCanOnlyBeAddedOrStruckAndKeepTheirHistory() throws {
+    var e = JournalEntry(verse: Bible.bundled().verses[0])
+    e.write("first", to: .interpretation)
+    e.write("  ", to: .interpretation)                 // blank lines are ignored
+    e.write("second", to: .interpretation)
+    #expect(e.interpretationNotes.count == 2)
+    #expect(e.interpretation == "second")
+    let second = e.interpretationNotes[1].id
+    e.toggleStrike(second, in: .interpretation)
+    #expect(e.interpretation == "first")                 // struck lines no longer count as current
+    e.toggleStrike(second, in: .interpretation)
+    e.toggleStrike(second, in: .interpretation)
+    #expect(e.interpretationNotes[1].isStruck)
+    #expect(e.interpretationNotes[1].wear == 3)
+    #expect(e.interpretationNotes[1].text == "second")   // the words themselves never change
+
+    let data = try JSONEncoder().encode([e])
+    let back = try JSONDecoder().decode([JournalEntry].self, from: data)
+    #expect(back.first?.interpretationNotes == e.interpretationNotes)
+}
+
+@Test func legacyTextBecomesFirstNote() throws {
+    let old = #"[{"id":"\#(UUID().uuidString)","date":0,"verse":{"book":"GEN","chapter":1,"verse":1,"ja":"a","en":"b"},"keyword":"k","interpretation":"x","action":"","outcome":"o"}]"#
+    let e = try #require(try JSONDecoder().decode([JournalEntry].self, from: Data(old.utf8)).first)
+    #expect(e.keywordNotes.map(\.text) == ["k"])
+    #expect(e.actionNotes.isEmpty)
+    #expect(e.outcomeNotes.first?.date == e.date)
+    #expect(e.noteCount == 3)
+}
+
+@Test func bookOpensOncePerDay() {
+    #expect(Cooldown.defaultInterval == 24 * 60 * 60)
 }

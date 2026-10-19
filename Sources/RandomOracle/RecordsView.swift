@@ -57,14 +57,14 @@ struct StatsBar: View {
 }
 
 private struct EntryRow: View {
-    @State var entry: JournalEntry
-    let journal: Journal
+    let entry: JournalEntry
+    @ObservedObject var journal: Journal
     let lang: AppLanguage
     @State private var sharing = false
 
     var body: some View {
         let l = L10n(lang: lang)
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 10) {
             HStack {
                 Text(entry.date.formatted(date: .abbreviated, time: .shortened))
                     .font(Theme.mincho(11)).foregroundStyle(Theme.inkFaint)
@@ -75,17 +75,12 @@ private struct EntryRow: View {
             }
             Text(entry.verse.text(lang)).font(Theme.verse(16)).lineSpacing(6)
             Text(entry.verse.reference(lang)).font(Theme.mincho(11)).foregroundStyle(Theme.inkFaint)
-            TextField(l.keyword, text: $entry.keyword, axis: .vertical)
-            TextField(l.interpretation, text: $entry.interpretation, axis: .vertical)
-            TextField(l.action, text: $entry.action, axis: .vertical)
-            TextField(l.outcome, text: $entry.outcome, axis: .vertical)
+            NotesDisclosure(entryID: entry.id, journal: journal, lang: lang)
+                .padding(.top, 4)
         }
-        .textFieldStyle(.roundedBorder)
-        .font(Theme.mincho(13))
         .padding(20)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Rectangle().fill(Color.white.opacity(0.55)).shadow(color: Theme.ink.opacity(0.08), radius: 4, y: 1))
-        .onChange(of: entry) { _, new in journal.upsert(new) }
-        .sheet(isPresented: $sharing) { ShareSheet(entry: entry, lang: lang) }
+        .sheet(isPresented: $sharing) { ShareSheet(entry: journal.entry(entry.id) ?? entry, lang: lang) }
     }
 }

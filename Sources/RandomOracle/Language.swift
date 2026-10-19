@@ -43,12 +43,22 @@ struct L10n {
     var step1: String { t("いちばん目に止まった言葉はどれですか？", "Which words caught your eye first?") }
     var step2: String { t("その言葉を、あなたの迷いに置き換えるとしたら？", "If those words were about your dilemma, what would they mean?") }
     var step3: String { t("では、どうしますか？", "So, what will you do?") }
-    var optional: String { t("書かなくても構いません", "Optional") }
     var next: String { t("次へ", "Next") }
-    var keyword: String { t("目に止まった言葉（任意）", "Words that caught your eye (optional)") }
-    var interpretation: String { t("どう読んだか（任意）", "How you read it (optional)") }
-    var action: String { t("どうするか（任意）", "What you will do (optional)") }
-    var outcome: String { t("その後どうなった？（任意）", "What happened afterwards? (optional)") }
+    var stepOutcome: String { t("その後、どうなりましたか？", "What happened afterwards?") }
+    func writings(_ n: Int) -> String { t("書き込み（\(n)）", "Writings (\(n))") }
+    func lastWritten(_ time: String) -> String { t("最後の書き込み \(time)", "Last written \(time)") }
+    var write: String { t("＋ 書き込む", "+ Write") }
+    var writePlaceholder: String { t("書き込む…", "Write…") }
+    var keep: String { t("残す", "Keep") }
+    func struckAt(_ time: String) -> String { t("線 \(time)", "struck \(time)") }
+    var strikeTitle: String { t("考えが、変わりましたか。", "Has your mind changed?") }
+    var strikeBody: String { t("線を引いても、文字は消えずに残ります。", "A line through it leaves the words in place.") }
+    var restoreTitle: String { t("やはり、この考えに戻りますか。", "Back to this thought after all?") }
+    var restoreBody: String { t("行ったり来たりした跡も、記録になります。", "Going back and forth leaves its own trace.") }
+    var strike: String { t("線を引く", "Strike through") }
+    var restore: String { t("線を戻す", "Restore") }
+    var leaveAsIs: String { t("そのままにする", "Leave it") }
+    func todayVerse(_ time: String) -> String { t("今日の一節　\(time) にひらいた", "Today’s verse · opened \(time)") }
     var done: String { t("書を閉じる", "Close the book") }
     var showContext: String { t("前後を読む", "Read around it") }
     var hideContext: String { t("この一節だけにする", "Show this verse only") }

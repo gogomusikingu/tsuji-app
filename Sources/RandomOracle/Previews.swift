@@ -30,11 +30,37 @@ enum PreviewRenderer {
             render(DrawView(bible: bible, journal: Journal(directory: dir), lang: lang)
                 .frame(width: 640, height: 560).background(Theme.paper).foregroundStyle(Theme.ink), "idle-\(lang.rawValue)", dir)
             var shared = JournalEntry(verse: verse)
-            shared.interpretation = lang == .ja ? "隠れずに、自分の考えをはっきり言えということ。" : "Speak plainly instead of hiding."
-            shared.keyword = lang == .ja ? "答えて" : "answered"
-            shared.action = lang == .ja ? "明日の会議で反対意見を言う。" : "Raise my objection at tomorrow's meeting."
-            shared.outcome = lang == .ja ? "言ってみたら、案が一つ通った。" : "I spoke up, and one proposal went through."
+            let ja = lang == .ja
+            shared.write(ja ? "答えて" : "answered", to: .keyword)
+            shared.write(ja ? "黙って従えということ。" : "Keep quiet and obey.", to: .interpretation)
+            shared.write(ja ? "隠れずに、自分の考えをはっきり言えということ。" : "Speak plainly instead of hiding.", to: .interpretation)
+            shared.write(ja ? "明日の会議で反対意見を言う。" : "Raise my objection at tomorrow's meeting.", to: .action)
+            shared.write(ja ? "言ってみたら、案が一つ通った。" : "I spoke up, and one proposal went through.", to: .outcome)
+            // Wear the first reading as if struck and restored a few times, ending struck.
+            let first = shared.interpretationNotes[0].id
+            for _ in 0..<5 { shared.toggleStrike(first, in: .interpretation) }
             render(ShareCard(entry: shared, lang: lang), "share-\(lang.rawValue)", dir)
+            let notesJournal = Journal(directory: FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString))
+            notesJournal.upsert(shared)
+            render(NotesSection(entryID: shared.id, journal: notesJournal, lang: lang)
+                .padding(24).frame(width: 390).background(Theme.paper).foregroundStyle(Theme.ink), "notes-\(lang.rawValue)", dir)
+            // Home while the book is closed for the day (body of the scroll view, without the scroll view).
+            let l = L10n(lang: lang)
+            render(VStack(alignment: .leading, spacing: 18) {
+                Text(l.todayVerse(NoteTime.short(shared.date))).font(Theme.mincho(11)).foregroundStyle(Theme.inkFaint)
+                VersePage(bible: bible, verse: verse, lang: lang, showContext: .constant(false))
+                NotesDisclosure(entryID: shared.id, journal: notesJournal, lang: lang)
+                Text(l.nextDraw("23:12:05")).font(Theme.mincho(12)).foregroundStyle(Theme.inkFaint).frame(maxWidth: .infinity)
+            }.padding(18).frame(width: 390).background(Theme.paper).foregroundStyle(Theme.ink), "today-\(lang.rawValue)", dir)
+            render(StrikeSheet(note: shared.interpretationNotes[1], lang: lang, onConfirm: {}, onCancel: {})
+                .frame(width: 390), "strike-\(lang.rawValue)", dir)
+            // Wear stages 0...6 for the same line.
+            render(VStack(alignment: .leading, spacing: 14) {
+                ForEach(0..<7) { n in
+                    NoteRow(note: Note(text: ja ? "隠れずに、自分の考えを言え" : "Speak plainly, don't hide",
+                                       strikes: Array(repeating: Date(), count: n)), lang: lang)
+                }
+            }.padding(24).frame(width: 390).background(Theme.paper).foregroundStyle(Theme.ink), "wear-\(lang.rawValue)", dir)
             render(StatsBar(stats: (12, 7, 3), lang: lang).padding(24).frame(width: 390).background(Theme.paper).foregroundStyle(Theme.ink), "stats-\(lang.rawValue)", dir)
             render(SplashView(lang: lang).frame(width: 390, height: 844), "splash-\(lang.rawValue)", dir)
             render(GuideContent(lang: lang).padding(32).frame(width: 580).background(Theme.paper).foregroundStyle(Theme.ink), "guide-\(lang.rawValue)", dir)

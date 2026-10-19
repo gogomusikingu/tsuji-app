@@ -1,8 +1,9 @@
 import Foundation
 
-/// Enforces "no second draw": after opening the book, it stays closed for a while.
+/// Enforces "no second draw": the book opens once a day. The rest of the day is for
+/// going back over that one verse in writing.
 struct Cooldown {
-    static let defaultInterval: TimeInterval = 60 * 60
+    static let defaultInterval: TimeInterval = 24 * 60 * 60
 
     let interval: TimeInterval
     let defaults: UserDefaults

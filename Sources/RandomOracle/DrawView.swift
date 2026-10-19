@@ -9,7 +9,7 @@ struct DrawView: View {
     private enum Phase { case idle, focusing, revealed }
 
     @State private var phase: Phase = .idle
-    @State private var entry: JournalEntry?
+    @State private var entryID: UUID?
     @State private var pageAngle: Double = 90
     @State private var step = 0
     @State private var showContext = false
@@ -42,9 +42,45 @@ struct DrawView: View {
         #endif
     }
 
+    /// The entry being written about: the one just drawn, read live from the journal.
+    private var entry: JournalEntry? { entryID.flatMap(journal.entry) }
+
+    @ViewBuilder
     private func idle(_ l: L10n) -> some View {
         let remaining = cooldown.remaining(now: now)
-        return VStack(spacing: 36) {
+        if remaining > 0, let today = journal.entries.first {
+            todayPage(today, remaining: remaining, l)
+        } else {
+            intro(l, remaining: remaining)
+        }
+    }
+
+    /// While the book is closed for the day: today's verse stays open for going back over it.
+    private func todayPage(_ today: JournalEntry, remaining: TimeInterval, _ l: L10n) -> some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 18) {
+                Text(l.todayVerse(NoteTime.short(today.date)))
+                    .font(Theme.mincho(11)).foregroundStyle(Theme.inkFaint)
+                VersePage(bible: bible, verse: today.verse, lang: lang, showContext: $showContext)
+                NotesDisclosure(entryID: today.id, journal: journal, lang: lang)
+                HStack {
+                    Button { sharing = journal.entry(today.id) } label: { Label(l.share, systemImage: "square.and.arrow.up") }
+                        .buttonStyle(.plain).font(Theme.mincho(13)).foregroundStyle(Theme.shu)
+                    Spacer()
+                }
+                Text(l.nextDraw(Cooldown.format(remaining)))
+                    .font(Theme.mincho(12).monospacedDigit())
+                    .foregroundStyle(Theme.inkFaint)
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 12)
+            }
+            .padding(8)
+        }
+        .scrollContentBackground(.hidden)
+    }
+
+    private func intro(_ l: L10n, remaining: TimeInterval) -> some View {
+        VStack(spacing: 36) {
             Spacer()
             TsujiMark().frame(width: 120, height: 120)
             Text(l.intro)
@@ -109,18 +145,13 @@ struct DrawView: View {
     }
 
     /// Questions shown one at a time. They help the user read meaning in, but never interpret for them.
+    /// Each can be written under as often as wanted, now or later in the day.
     private func guide(_ l: L10n) -> some View {
-        let steps: [(String, WritableKeyPath<JournalEntry, String>)] = [
-            (l.step1, \.keyword), (l.step2, \.interpretation), (l.step3, \.action),
-        ]
+        let steps: [NoteKind] = [.keyword, .interpretation, .action]
         return VStack(alignment: .leading, spacing: 14) {
-            ForEach(0...step, id: \.self) { i in
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("\(["一", "二", "三"][i])　\(steps[i].0)").font(Theme.mincho(15))
-                    TextField(l.optional, text: binding(steps[i].1), axis: .vertical)
-                        .textFieldStyle(.roundedBorder)
-                }
-                .transition(.opacity)
+            if let entryID {
+                NotesSection(entryID: entryID, journal: journal, lang: lang,
+                             kinds: Array(steps.prefix(step + 1)), openFirst: true)
             }
             HStack {
                 Button { sharing = entry } label: { Label(l.share, systemImage: "square.and.arrow.up") }
@@ -138,18 +169,13 @@ struct DrawView: View {
         }
     }
 
-    private func binding(_ key: WritableKeyPath<JournalEntry, String>) -> Binding<String> {
-        Binding(get: { entry?[keyPath: key] ?? "" },
-                set: { entry?[keyPath: key] = $0 })
-    }
-
     private func begin() {
         guard cooldown.remaining() == 0 else { return }
         // Commit the draw before revealing it, so quitting mid-way cannot be used to redraw.
         let drawn = JournalEntry(verse: bible.draw())
         cooldown.markDrawn()
         journal.upsert(drawn)
-        entry = drawn
+        entryID = drawn.id
         phase = .focusing
         DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
             pageAngle = 90
@@ -163,11 +189,9 @@ struct DrawView: View {
     }
 
     private func finish() {
-        if let entry {
-            journal.upsert(entry)
-            Followup.schedule(for: entry, lang: lang)
-        }
-        entry = nil
+        if let entry { Followup.schedule(for: entry, lang: lang) }
+        entryID = nil
+        showContext = false
         now = Date()
         phase = .idle
     }
