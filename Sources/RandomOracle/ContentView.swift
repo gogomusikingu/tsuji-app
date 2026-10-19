@@ -70,8 +70,9 @@ struct ContentView: View {
         HStack(spacing: 14) {
             TsujiMark().frame(width: 30, height: 30)
             VStack(alignment: .leading, spacing: 2) {
-                Text(l.appName).font(Theme.mincho(20, bold: true))
-                Text(l.tagline).font(Theme.mincho(11)).foregroundStyle(Theme.inkFaint)
+                // The tagline leads: it says what the app does; the name alone would not.
+                Text(l.tagline).font(Theme.mincho(15, bold: true)).lineLimit(1).minimumScaleFactor(0.8)
+                Text(l.appName).font(Theme.mincho(11)).foregroundStyle(Theme.inkFaint)
             }
             Spacer()
             #if os(macOS)
@@ -156,8 +157,8 @@ struct SplashView: View {
         VStack(spacing: 28) {
             Spacer()
             TsujiMark().frame(width: 132, height: 132)
-            Text(l.appName).font(Theme.mincho(lang == .ja ? 44 : 34, bold: true))
-            Text(l.tagline).font(Theme.mincho(14)).foregroundStyle(Theme.inkFaint)
+            Text(l.tagline).font(Theme.mincho(lang == .ja ? 24 : 22, bold: true))
+            Text(l.appName).font(Theme.mincho(18)).foregroundStyle(Theme.inkFaint)
             Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)

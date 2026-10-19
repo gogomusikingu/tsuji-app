@@ -12,7 +12,7 @@ struct L10n {
     private func t(_ ja: String, _ en: String) -> String { lang == .ja ? ja : en }
 
     var appName: String { t("辻", "Sortes") }
-    var tagline: String { t("迷ったら、書をひらく", "Open the book when in doubt") }
+    var tagline: String { t("迷ったら、偶然の一節に聞く", "In doubt? Ask a chance verse") }
     var tabDraw: String { t("ひらく", "Open") }
     var tabMenu: String { t("メニュー", "Menu") }
     var menuIntro: String { t("メニューが決められないときは、写真を撮るだけ。\n書かれた品から、ひとつを無作為に選びます。",
