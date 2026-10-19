@@ -4,9 +4,24 @@ struct JournalEntry: Codable, Identifiable, Hashable {
     var id = UUID()
     var date = Date()
     var verse: Verse
+    var keyword = ""
     var interpretation = ""
     var action = ""
     var outcome = ""
+
+    init(verse: Verse) { self.verse = verse }
+
+    // Tolerates journals saved by older versions that lack newer fields.
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(UUID.self, forKey: .id)
+        date = try c.decode(Date.self, forKey: .date)
+        verse = try c.decode(Verse.self, forKey: .verse)
+        keyword = try c.decodeIfPresent(String.self, forKey: .keyword) ?? ""
+        interpretation = try c.decodeIfPresent(String.self, forKey: .interpretation) ?? ""
+        action = try c.decodeIfPresent(String.self, forKey: .action) ?? ""
+        outcome = try c.decodeIfPresent(String.self, forKey: .outcome) ?? ""
+    }
 }
 
 /// Local-only storage: entries never leave the device.

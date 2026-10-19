@@ -29,6 +29,7 @@ private struct EntryRow: View {
                 .font(.caption).foregroundStyle(.secondary)
             Text(entry.verse.text(lang)).font(.system(.body, design: .serif))
             Text(entry.verse.reference(lang)).font(.caption).foregroundStyle(.secondary)
+            TextField(l.keyword, text: $entry.keyword, axis: .vertical)
             TextField(l.interpretation, text: $entry.interpretation, axis: .vertical)
             TextField(l.action, text: $entry.action, axis: .vertical)
             TextField(l.outcome, text: $entry.outcome, axis: .vertical)

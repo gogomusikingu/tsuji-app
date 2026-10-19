@@ -40,6 +40,13 @@ final class Bible {
         return verses.randomElement(using: &rng)!
     }
 
+    /// The verse with up to `radius` neighbours on each side, staying within the same chapter.
+    func context(of target: Verse, radius: Int) -> [Verse] {
+        guard let i = verses.firstIndex(of: target) else { return [target] }
+        let range = max(0, i - radius)...min(verses.count - 1, i + radius)
+        return verses[range].filter { $0.book == target.book && $0.chapter == target.chapter }
+    }
+
     static func bookName(_ code: String, _ lang: AppLanguage) -> String {
         guard let names = bookNames[code] else { return code }
         return lang == .ja ? names.0 : names.1

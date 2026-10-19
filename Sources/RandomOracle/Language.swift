@@ -17,8 +17,12 @@ struct L10n {
                           "Hold one dilemma in your mind.\nThe book opens at random. There is no second draw.") }
     var openButton: String { t("書を開く", "Open the Book") }
     var focusing: String { t("目を閉じて、迷いを思い浮かべて…", "Close your eyes and hold your dilemma…") }
-    var prompt: String { t("この言葉は、あなたの迷いのどこに重なりますか？\n解釈は、あなただけのものです。",
-                           "Where does this touch your dilemma?\nThe interpretation is yours alone.") }
+    var step1: String { t("いちばん目に止まった言葉はどれですか？", "Which words caught your eye first?") }
+    var step2: String { t("その言葉を、あなたの迷いに置き換えるとしたら？", "If those words were about your dilemma, what would they mean?") }
+    var step3: String { t("では、どうしますか？", "So, what will you do?") }
+    var optional: String { t("書かなくても構いません", "Optional") }
+    var next: String { t("次へ", "Next") }
+    var keyword: String { t("目に止まった言葉（任意）", "Words that caught your eye (optional)") }
     var interpretation: String { t("どう読んだか（任意）", "How you read it (optional)") }
     var action: String { t("どうするか（任意）", "What you will do (optional)") }
     var outcome: String { t("その後どうなった？（任意）", "What happened afterwards? (optional)") }

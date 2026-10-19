@@ -12,6 +12,7 @@ struct DrawView: View {
     @State private var phase: Phase = .idle
     @State private var entry: JournalEntry?
     @State private var pageAngle: Double = 90
+    @State private var step = 0
     @State private var now = Date()
     private let cooldown = Cooldown()
     private let ticker = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
@@ -63,37 +64,71 @@ struct DrawView: View {
     }
 
     private func revealed(_ l: L10n) -> some View {
-        VStack(spacing: 20) {
-            if let verse = entry?.verse {
-                VStack(spacing: 16) {
-                    Text(verse.text(lang))
-                        .font(.system(.title2, design: .serif))
-                        .multilineTextAlignment(.center)
-                        .lineSpacing(8)
-                        .textSelection(.enabled)
-                    Text(verse.reference(lang))
-                        .font(.system(.callout, design: .serif))
-                        .foregroundStyle(.secondary)
+        ScrollView {
+            VStack(spacing: 20) {
+                if let verse = entry?.verse {
+                    page(verse)
+                        .rotation3DEffect(.degrees(pageAngle), axis: (x: 0, y: 1, z: 0), anchor: .leading, perspective: 0.4)
+                        .opacity(pageAngle > 80 ? 0 : 1)
+                    if pageAngle == 0 { guide(l) }
                 }
-                .padding(28)
-                .frame(maxWidth: .infinity)
-                .background(RoundedRectangle(cornerRadius: 6).fill(Color(nsColor: .textBackgroundColor)).shadow(radius: 3))
-                .rotation3DEffect(.degrees(pageAngle), axis: (x: 0, y: 1, z: 0), anchor: .leading, perspective: 0.4)
-                .opacity(pageAngle > 80 ? 0 : 1)
-
-                Text(l.prompt)
-                    .font(.callout)
-                    .multilineTextAlignment(.center)
-                    .foregroundStyle(.secondary)
-
-                Form {
-                    TextField(l.interpretation, text: binding(\.interpretation), axis: .vertical)
-                    TextField(l.action, text: binding(\.action), axis: .vertical)
-                }
-                .formStyle(.grouped)
-
-                Button(l.done, action: finish).controlSize(.large)
             }
+            .padding(.horizontal, 4)
+        }
+    }
+
+    /// The drawn verse, with the surrounding verses shown faintly for context.
+    private func page(_ verse: Verse) -> some View {
+        let context = bible.context(of: verse, radius: 2)
+        return VStack(alignment: .leading, spacing: 10) {
+            ForEach(context, id: \.self) { v in
+                let isDrawn = v == verse
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    Text("\(v.verse)")
+                        .font(.caption2.monospacedDigit())
+                        .foregroundStyle(.secondary)
+                    Text(v.text(lang))
+                        .font(.system(isDrawn ? .title3 : .callout, design: .serif))
+                        .fontWeight(isDrawn ? .semibold : .regular)
+                        .foregroundStyle(isDrawn ? .primary : .tertiary)
+                        .lineSpacing(isDrawn ? 6 : 3)
+                        .textSelection(.enabled)
+                }
+            }
+            Text(verse.reference(lang))
+                .font(.system(.callout, design: .serif))
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, alignment: .trailing)
+        }
+        .padding(28)
+        .frame(maxWidth: .infinity)
+        .background(RoundedRectangle(cornerRadius: 6).fill(Color(nsColor: .textBackgroundColor)).shadow(radius: 3))
+    }
+
+    /// Questions shown one at a time. They help the user read meaning in, but never interpret for them.
+    private func guide(_ l: L10n) -> some View {
+        let steps: [(String, WritableKeyPath<JournalEntry, String>)] = [
+            (l.step1, \.keyword), (l.step2, \.interpretation), (l.step3, \.action),
+        ]
+        return VStack(alignment: .leading, spacing: 14) {
+            ForEach(0...step, id: \.self) { i in
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("\(i + 1). \(steps[i].0)").font(.callout.weight(.medium))
+                    TextField(l.optional, text: binding(steps[i].1), axis: .vertical)
+                        .textFieldStyle(.roundedBorder)
+                }
+                .transition(.opacity)
+            }
+            HStack {
+                Spacer()
+                if step < steps.count - 1 {
+                    Button(l.next) { withAnimation { step += 1 } }
+                } else {
+                    Text(l.disclaimer).font(.footnote).foregroundStyle(.secondary)
+                }
+                Button(l.done, action: finish)
+            }
+            .controlSize(.large)
         }
     }
 
@@ -112,6 +147,7 @@ struct DrawView: View {
         phase = .focusing
         DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
             pageAngle = 90
+            step = 0
             phase = .revealed
             NSHapticFeedbackManager.defaultPerformer.perform(.levelChange, performanceTime: .now)
             withAnimation(.easeOut(duration: 1.2)) { pageAngle = 0 }

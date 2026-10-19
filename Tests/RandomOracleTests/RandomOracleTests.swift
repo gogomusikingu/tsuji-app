@@ -35,3 +35,19 @@ import Testing
     #expect(reloaded.entries.count == 1)
     #expect(reloaded.entries.first?.outcome == "went well")
 }
+
+@Test func contextStaysWithinChapter() {
+    let bible = Bible.bundled()
+    let first = bible.verses.first { $0.book == "PRO" && $0.chapter == 16 && $0.verse == 1 }!
+    let context = bible.context(of: first, radius: 2)
+    #expect(context.map(\.verse) == [1, 2, 3])
+    let mid = bible.verses.first { $0.book == "PRO" && $0.chapter == 16 && $0.verse == 9 }!
+    #expect(bible.context(of: mid, radius: 2).map(\.verse) == [7, 8, 9, 10, 11])
+}
+
+@Test func journalLoadsEntriesWithoutKeywordField() throws {
+    let old = #"[{"id":"\#(UUID().uuidString)","date":0,"verse":{"book":"GEN","chapter":1,"verse":1,"ja":"a","en":"b"},"interpretation":"x","action":"","outcome":""}]"#
+    let entries = try JSONDecoder().decode([JournalEntry].self, from: Data(old.utf8))
+    #expect(entries.first?.keyword == "")
+    #expect(entries.first?.interpretation == "x")
+}
