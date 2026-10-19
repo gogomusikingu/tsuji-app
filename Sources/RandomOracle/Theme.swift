@@ -8,7 +8,6 @@ enum Theme {
     static let ink = Color(red: 0.169, green: 0.161, blue: 0.153)        // 墨
     static let inkFaint = Color(red: 0.169, green: 0.161, blue: 0.153).opacity(0.55)
     static let shu = Color(red: 0.776, green: 0.278, blue: 0.188)        // 朱
-    static let road = Color(red: 0.78, green: 0.75, blue: 0.70)          // warm grey of a dirt road (mark only)
 
     #if os(iOS)
     static let screenPadding: CGFloat = 18
@@ -37,55 +36,71 @@ enum Theme {
     }()
 }
 
-/// The 辻 mark: an open book lying on a road; the road runs on past it and forks into two,
-/// each branch vanishing at its own point on the same (unseen) horizon. One vermilion line on the page
-/// is the verse the book fell open at: the only accent, since the verse is what the app is about. Geometry is on a 1024 grid, scaled to 95% so the tips clear
-/// the iOS icon's rounded corners.
+/// The 辻 mark: a thick open book drawn only with straight lines and circular arcs, in two line
+/// weights (a heavy silhouette, light inner divisions), with one vermilion line on the right page:
+/// the verse the book fell open at. Geometry is on a 1024 grid.
 struct TsujiMark: View {
     var ink: Color = Theme.ink
     var accent: Color = Theme.shu
-    var road: Color = Theme.road
 
     var body: some View {
         Canvas { ctx, size in
             let k = min(size.width, size.height) / 1024
             ctx.translateBy(x: (size.width - 1024 * k) / 2, y: (size.height - 1024 * k) / 2)
             ctx.scaleBy(x: k, y: k)
-            ctx.translateBy(x: 512, y: 512)
-            ctx.scaleBy(x: 0.95, y: 0.95)
-            ctx.translateBy(x: -512, y: -512)
 
-            let horizon: CGFloat = 110
-            let vp = CGPoint(x: 512, y: horizon)
-            // Point on the line from v through q at height y.
-            func onRay(_ v: CGPoint, _ q: CGPoint, _ y: CGFloat) -> CGPoint {
-                CGPoint(x: v.x + (q.x - v.x) * (y - v.y) / (q.y - v.y), y: y)
-            }
-            func shape(_ pts: [CGPoint]) -> Path {
-                var p = Path(); p.addLines(pts); p.closeSubpath(); return p
-            }
+            let farY: CGFloat = 240, nearY: CGFloat = 570, dip: CGFloat = 34, rise: CGFloat = 22, block: CGFloat = 120
+            let wf: CGFloat = 284, wn: CGFloat = 315
+            func p(_ dx: CGFloat, _ y: CGFloat) -> CGPoint { CGPoint(x: 512 + dx, y: y) }
 
-            // Road: the stem runs to the centre point; each branch to its own point, where it ends sharp.
-            let sl = CGPoint(x: 322, y: 900), sr = CGPoint(x: 702, y: 900)
-            let fl = onRay(vp, sl, 450), fr = onRay(vp, sr, 450)
-            let crotch = CGPoint(x: 512, y: 450 - (fr.x - fl.x) * 0.35)
-            // One outline, so no seam shows where the stem meets the branches.
-            ctx.fill(shape([sl, fl, CGPoint(x: 72, y: horizon), crotch, CGPoint(x: 952, y: horizon), fr, sr]), with: .color(road))
+            // Silhouette: the far page edges, straight sides, the bottom of the page block.
+            var outline = Path()
+            outline.move(to: p(-wf, farY))
+            arc(&outline, p(-wf, farY), p(-wf / 2, farY - rise), p(0, farY + dip))
+            arc(&outline, p(0, farY + dip), p(wf / 2, farY - rise), p(wf, farY))
+            outline.addLine(to: p(wn, nearY + block))
+            arc(&outline, p(wn, nearY + block), p(wn / 2, nearY - rise + block), p(0, nearY + dip + block))
+            arc(&outline, p(0, nearY + dip + block), p(-wn / 2, nearY - rise + block), p(-wn, nearY + block))
+            outline.closeSubpath()
 
-            // Book lying open on the road, its sides running to the same centre point.
-            for s in [-1.0, 1.0] as [CGFloat] {
-                let innerTop = CGPoint(x: 512 + s * 12, y: 620), outerTop = CGPoint(x: 512 + s * 260, y: 620)
-                ctx.fill(shape([innerTop, outerTop, onRay(vp, outerTop, 820), onRay(vp, innerTop, 820)]), with: .color(ink))
-            }
+            // Divisions: where the pages meet the block of page edges, and the gutter.
+            var inner = Path()
+            inner.move(to: p(-wn, nearY))
+            arc(&inner, p(-wn, nearY), p(-wn / 2, nearY - rise), p(0, nearY + dip))
+            arc(&inner, p(0, nearY + dip), p(wn / 2, nearY - rise), p(wn, nearY))
+            inner.move(to: p(0, farY + dip))
+            inner.addLine(to: p(0, nearY + dip + block))
 
-            // The verse: one line on the right page, following the page's perspective.
-            let inner = onRay(vp, CGPoint(x: 524, y: 620), 720).x, outer = onRay(vp, CGPoint(x: 772, y: 620), 720).x
+            ctx.stroke(outline, with: .color(ink), style: StrokeStyle(lineWidth: 36, lineCap: .round, lineJoin: .round))
+            ctx.stroke(inner, with: .color(ink), style: StrokeStyle(lineWidth: 10, lineCap: .round, lineJoin: .round))
+
             var verse = Path()
-            verse.move(to: CGPoint(x: inner + (outer - inner) * 0.14, y: 720))
-            verse.addLine(to: CGPoint(x: inner + (outer - inner) * 0.82, y: 720))
-            ctx.stroke(verse, with: .color(accent), style: StrokeStyle(lineWidth: 16, lineCap: .round))
+            verse.move(to: p(70, 395))
+            verse.addLine(to: p(240, 395))
+            ctx.stroke(verse, with: .color(accent), style: StrokeStyle(lineWidth: 22, lineCap: .round))
         }
         .aspectRatio(1, contentMode: .fit)
+    }
+
+    /// Adds the circular arc from a through b to c (the path is already at a), traced finely enough
+    /// to be indistinguishable from a true arc at any size.
+    private func arc(_ path: inout Path, _ a: CGPoint, _ b: CGPoint, _ c: CGPoint) {
+        let d = 2 * (a.x * (b.y - c.y) + b.x * (c.y - a.y) + c.x * (a.y - b.y))
+        let a2 = a.x * a.x + a.y * a.y, b2 = b.x * b.x + b.y * b.y, c2 = c.x * c.x + c.y * c.y
+        let o = CGPoint(x: (a2 * (b.y - c.y) + b2 * (c.y - a.y) + c2 * (a.y - b.y)) / d,
+                        y: (a2 * (c.x - b.x) + b2 * (a.x - c.x) + c2 * (b.x - a.x)) / d)
+        let r = hypot(a.x - o.x, a.y - o.y)
+        func angle(_ q: CGPoint) -> CGFloat { atan2(q.y - o.y, q.x - o.x) }
+        func positive(_ x: CGFloat) -> CGFloat { let m = x.truncatingRemainder(dividingBy: 2 * .pi); return m < 0 ? m + 2 * .pi : m }
+        let start = angle(a)
+        // Go the way round that passes through b.
+        let sweepPos = positive(angle(c) - start)
+        let sweep = positive(angle(b) - start) < sweepPos ? sweepPos : sweepPos - 2 * .pi
+        let steps = 48
+        for i in 1...steps {
+            let t = start + sweep * CGFloat(i) / CGFloat(steps)
+            path.addLine(to: CGPoint(x: o.x + r * cos(t), y: o.y + r * sin(t)))
+        }
     }
 }
 
