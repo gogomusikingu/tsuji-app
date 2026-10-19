@@ -68,6 +68,7 @@ struct NotesSection: View {
     @State private var writing: NoteKind?
     @State private var draft = ""
     @State private var striking: (note: Note, kind: NoteKind)?
+    @State private var showStrike = false
     @FocusState private var focused: Bool
 
     var body: some View {
@@ -83,7 +84,7 @@ struct NotesSection: View {
                     ForEach(entry?.notes(kind) ?? []) { note in
                         NoteRow(note: note, lang: lang)
                             .contentShape(Rectangle())
-                            .onTapGesture { striking = (note, kind) }
+                            .onTapGesture { striking = (note, kind); showStrike = true }
                     }
                     if writing == kind {
                         HStack(alignment: .bottom, spacing: 8) {
@@ -110,12 +111,17 @@ struct NotesSection: View {
         .onAppear { if openFirst, writing == nil, let first = kinds.first { open(first) } }
         // When the next question appears, open it for writing straight away.
         .onChange(of: kinds) { old, new in if openFirst, new.count > old.count, let last = new.last { open(last) } }
-        .sheet(isPresented: Binding(get: { striking != nil }, set: { if !$0 { striking = nil } })) {
+        .fadeCover(isPresented: $showStrike) {
             if let striking {
                 StrikeSheet(note: striking.note, lang: lang) {
-                    journal.toggleStrike(striking.note.id, in: striking.kind, of: entryID)
-                    self.striking = nil
-                } onCancel: { self.striking = nil }
+                    showStrike = false
+                    // Let the question fade away before the line changes underneath it.
+                    DispatchQueue.main.asyncAfter(deadline: .now() + Fade.duration) {
+                        withAnimation(.easeInOut(duration: 1.0)) {
+                            journal.toggleStrike(striking.note.id, in: striking.kind, of: entryID)
+                        }
+                    }
+                } onCancel: { showStrike = false }
             }
         }
     }
@@ -123,14 +129,14 @@ struct NotesSection: View {
     private func open(_ kind: NoteKind) {
         if let writing, writing != kind, !draft.isEmpty { save(writing) }
         draft = ""
-        withAnimation { writing = kind }
+        withAnimation(Fade.animation) { writing = kind }
         focused = true
     }
 
     private func save(_ kind: NoteKind) {
         journal.write(draft, to: kind, of: entryID)
         draft = ""
-        withAnimation { writing = nil }
+        withAnimation(Fade.animation) { writing = nil }
     }
 }
 
@@ -149,24 +155,43 @@ struct NoteRow: View {
         HStack(alignment: .firstTextBaseline, spacing: 10) {
             Text(note.text)
                 .font(Theme.mincho(13))
-                .strikethrough(note.isStruck, color: Theme.ink.opacity(0.7))
                 .foregroundStyle(Theme.ink.opacity(1 - 0.9 * pow(f, 0.8)))
                 .blur(radius: 4 * pow(f, 1.4))
                 .lineSpacing(3)
                 .fixedSize(horizontal: false, vertical: true)
+                // The line through it is drawn fresh, so it stays sharp however worn the words are.
+                .overlay { if note.isStruck { StrikeLine(text: note.text, seed: note.id, stroke: note.wear) } }
                 // The worn patch sits under the words only, not the whole row.
                 .background { if note.wear > 0 { Smudge(seed: note.id, amount: f) } }
                 .frame(maxWidth: .infinity, alignment: .leading)
-            VStack(alignment: .trailing, spacing: 2) {
-                Text(NoteTime.short(note.date))
-                if note.isStruck, let last = note.strikes.last {
-                    Text(L10n(lang: lang).struckAt(NoteTime.short(last)))
-                }
-            }
-            .font(Theme.mincho(10).monospacedDigit())
-            .foregroundStyle(Theme.inkFaint)
+            Text(NoteTime.short(note.date))
+                .font(Theme.mincho(10).monospacedDigit())
+                .foregroundStyle(Theme.inkFaint)
         }
         .padding(.leading, 14)
+    }
+}
+
+/// A hand-drawn line through the words: unblurred, and never quite straight. Each new strike
+/// (a different `stroke` count) lands at a slightly different angle and height, as a pen would.
+struct StrikeLine: View {
+    let text: String
+    let seed: UUID
+    let stroke: Int
+
+    var body: some View {
+        var rng = SeededRandom(seed, salt: UInt64(stroke))
+        let angle = rng.next(-1.2, 1.2), dy = rng.next(-1.5, 1.5), dx = rng.next(-3, 3)
+        // Same text with clear ink: only its system strike-through shows, wrapped exactly like the words.
+        return Text(text)
+            .font(Theme.mincho(13))
+            .lineSpacing(3)
+            .foregroundStyle(.clear)
+            .strikethrough(true, color: Theme.ink.opacity(0.8))
+            .fixedSize(horizontal: false, vertical: true)
+            .rotationEffect(.degrees(angle))
+            .offset(x: dx, y: dy)
+            .allowsHitTesting(false)
     }
 }
 
@@ -196,9 +221,9 @@ struct Smudge: View {
 /// Deterministic random numbers from a UUID, so each smudge keeps its shape between launches.
 struct SeededRandom {
     private var state: UInt64
-    init(_ id: UUID) {
+    init(_ id: UUID, salt: UInt64 = 0) {
         let u = id.uuid
-        state = [u.0, u.1, u.2, u.3, u.4, u.5, u.6, u.7].reduce(0) { $0 << 8 | UInt64($1) } | 1
+        state = ([u.0, u.1, u.2, u.3, u.4, u.5, u.6, u.7].reduce(0) { $0 << 8 | UInt64($1) } ^ (salt &* 0x9E3779B97F4A7C15)) | 1
     }
     mutating func next(_ lo: CGFloat, _ hi: CGFloat) -> CGFloat {
         state ^= state << 13; state ^= state >> 7; state ^= state << 17
@@ -230,14 +255,9 @@ struct StrikeSheet: View {
             .padding(.top, 6)
         }
         .padding(28)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        #if os(iOS)
-        .presentationDetents([.height(320)])
-        #else
-        .frame(width: 420)
-        #endif
-        .background(Theme.paper)
+        .frame(maxWidth: 420, alignment: .leading)
+        .background(Rectangle().fill(Theme.paper).shadow(color: Theme.ink.opacity(0.12), radius: 10, y: 2))
+        .padding(24)
         .foregroundStyle(Theme.ink)
-        .preferredColorScheme(.light)
     }
 }

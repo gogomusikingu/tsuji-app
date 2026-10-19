@@ -72,8 +72,8 @@ struct ShareCard: View {
 struct ShareSheet: View {
     let entry: JournalEntry
     let lang: AppLanguage
+    let onClose: () -> Void
     @State private var includeReading = true
-    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         let l = L10n(lang: lang)
@@ -89,7 +89,7 @@ struct ShareSheet: View {
                 Toggle(l.shareIncludeReading, isOn: $includeReading).font(Theme.mincho(13))
             }
             HStack {
-                Button(l.cancel) { dismiss() }.buttonStyle(InkButtonStyle())
+                Button(l.cancel, action: onClose).buttonStyle(InkButtonStyle())
                 Spacer()
                 if let image {
                     ShareLink(item: image, preview: SharePreview(l.appName, image: image)) {
@@ -103,7 +103,6 @@ struct ShareSheet: View {
         #if os(macOS)
         .frame(width: 440)
         #endif
-        .background(Theme.paper)
         .foregroundStyle(Theme.ink)
         .tint(Theme.shu)
         .preferredColorScheme(.light)

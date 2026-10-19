@@ -16,22 +16,28 @@ struct DrawView: View {
     @State private var showOthers = false
     @State private var now = Date()
     @State private var sharing: JournalEntry?
+    @State private var showShare = false
+    /// Today's verse stays folded away behind a button until the user chooses to open it again.
+    @State private var showToday = false
     private let cooldown = Cooldown()
     private let ticker = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
     var body: some View {
         let l = L10n(lang: lang)
-        VStack(spacing: 24) {
+        // Each stage dissolves into the next.
+        ZStack {
             switch phase {
-            case .idle: idle(l)
-            case .focusing: focusing(l)
-            case .revealed: revealed(l)
+            case .idle: idle(l).transition(.opacity)
+            case .focusing: focusing(l).transition(.opacity)
+            case .revealed: revealed(l).transition(.opacity)
             }
         }
         .padding(Theme.screenPadding)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .onReceive(ticker) { now = $0 }
-        .sheet(item: $sharing) { ShareSheet(entry: $0, lang: lang) }
+        .fadeCover(isPresented: $showShare) {
+            if let sharing { ShareSheet(entry: sharing, lang: lang) { showShare = false } }
+        }
         #if DEBUG
         // Screenshot automation: TSUJI_AUTODRAW=1 opens the book right after launch.
         .onAppear {
@@ -48,10 +54,35 @@ struct DrawView: View {
     @ViewBuilder
     private func idle(_ l: L10n) -> some View {
         let remaining = cooldown.remaining(now: now)
-        if remaining > 0, let today = journal.entries.first {
-            todayPage(today, remaining: remaining, l)
-        } else {
-            intro(l, remaining: remaining)
+        ZStack {
+            if remaining > 0, let today = journal.entries.first {
+                if showToday {
+                    todayPage(today, remaining: remaining, l).transition(.opacity)
+                } else {
+                    closedHome(remaining: remaining, l).transition(.opacity)
+                }
+            } else {
+                intro(l, remaining: remaining).transition(.opacity)
+            }
+        }
+    }
+
+    /// The book is closed for today; today's verse can be opened again from here.
+    private func closedHome(remaining: TimeInterval, _ l: L10n) -> some View {
+        VStack(spacing: 36) {
+            Spacer()
+            TsujiMark().frame(width: 120, height: 120)
+            Text(l.todayAlreadyOpen)
+                .font(Theme.mincho(16))
+                .multilineTextAlignment(.center)
+                .lineSpacing(10)
+            Button(l.openToday) { withAnimation(Fade.animation) { showToday = true } }
+                .buttonStyle(InkButtonStyle())
+            Text(l.nextDraw(Cooldown.format(remaining)))
+                .font(Theme.mincho(13).monospacedDigit())
+                .foregroundStyle(Theme.inkFaint)
+            Spacer()
+            Text(l.disclaimer).font(Theme.mincho(11)).foregroundStyle(Theme.inkFaint)
         }
     }
 
@@ -64,9 +95,11 @@ struct DrawView: View {
                 VersePage(bible: bible, verse: today.verse, lang: lang, showContext: $showContext)
                 NotesDisclosure(entryID: today.id, journal: journal, lang: lang)
                 HStack {
-                    Button { sharing = journal.entry(today.id) } label: { Label(l.share, systemImage: "square.and.arrow.up") }
+                    Button { share(journal.entry(today.id)) } label: { Label(l.share, systemImage: "square.and.arrow.up") }
                         .buttonStyle(.plain).font(Theme.mincho(13)).foregroundStyle(Theme.shu)
                     Spacer()
+                    Button(l.done) { withAnimation(Fade.animation) { showToday = false } }
+                        .buttonStyle(InkButtonStyle())
                 }
                 Text(l.nextDraw(Cooldown.format(remaining)))
                     .font(Theme.mincho(12).monospacedDigit())
@@ -154,11 +187,11 @@ struct DrawView: View {
                              kinds: Array(steps.prefix(step + 1)), openFirst: true)
             }
             HStack {
-                Button { sharing = entry } label: { Label(l.share, systemImage: "square.and.arrow.up") }
+                Button { share(entry) } label: { Label(l.share, systemImage: "square.and.arrow.up") }
                     .buttonStyle(.plain).font(Theme.mincho(13)).foregroundStyle(Theme.shu)
                 Spacer()
                 if step < steps.count - 1 {
-                    Button(l.next) { withAnimation { step += 1 } }.buttonStyle(InkButtonStyle())
+                    Button(l.next) { withAnimation(Fade.animation) { step += 1 } }.buttonStyle(InkButtonStyle())
                 }
                 Button(l.done, action: finish).buttonStyle(InkButtonStyle(filled: true))
             }
@@ -169,6 +202,12 @@ struct DrawView: View {
         }
     }
 
+    private func share(_ e: JournalEntry?) {
+        guard let e else { return }
+        sharing = e
+        showShare = true
+    }
+
     private func begin() {
         guard cooldown.remaining() == 0 else { return }
         // Commit the draw before revealing it, so quitting mid-way cannot be used to redraw.
@@ -176,15 +215,15 @@ struct DrawView: View {
         cooldown.markDrawn()
         journal.upsert(drawn)
         entryID = drawn.id
-        phase = .focusing
+        withAnimation(Fade.animation) { phase = .focusing }
         DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
             pageAngle = 90
             step = 0
             showContext = false
             showOthers = false
-            phase = .revealed
+            withAnimation(Fade.animation) { phase = .revealed }
             Platform.haptic()
-            withAnimation(.easeOut(duration: 1.2)) { pageAngle = 0 }
+            withAnimation(.easeOut(duration: 1.2).delay(0.3)) { pageAngle = 0 }
         }
     }
 
@@ -192,8 +231,9 @@ struct DrawView: View {
         if let entry { Followup.schedule(for: entry, lang: lang) }
         entryID = nil
         showContext = false
+        showToday = false
         now = Date()
-        phase = .idle
+        withAnimation(Fade.animation) { phase = .idle }
     }
 }
 

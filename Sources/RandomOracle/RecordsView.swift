@@ -47,6 +47,8 @@ private struct EntryRow: View {
         .padding(20)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Rectangle().fill(Color.white.opacity(0.55)).shadow(color: Theme.ink.opacity(0.08), radius: 4, y: 1))
-        .sheet(isPresented: $sharing) { ShareSheet(entry: journal.entry(entry.id) ?? entry, lang: lang) }
+        .fadeCover(isPresented: $sharing) {
+            ShareSheet(entry: journal.entry(entry.id) ?? entry, lang: lang) { sharing = false }
+        }
     }
 }

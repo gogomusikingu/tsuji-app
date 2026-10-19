@@ -22,6 +22,15 @@ enum PreviewRenderer {
            let png = rep.representation(using: .png, properties: [:]) {
             try? png.write(to: dir.appendingPathComponent("AppIcon.png"))
         }
+        // System launch screen image: the mark alone on transparency, at SplashView's size.
+        for scale in 1...3 {
+            let r = ImageRenderer(content: TsujiMark().frame(width: SplashView.markSize, height: SplashView.markSize))
+            r.scale = CGFloat(scale)
+            if let tiff = r.nsImage?.tiffRepresentation, let rep = NSBitmapImageRep(data: tiff),
+               let png = rep.representation(using: .png, properties: [:]) {
+                try? png.write(to: dir.appendingPathComponent("LaunchMark@\(scale)x.png"))
+            }
+        }
         for lang in AppLanguage.allCases {
             render(VersePage(bible: bible, verse: verse, lang: lang, showContext: .constant(false))
                 .padding(40).frame(width: 640).background(Theme.paper), "page-\(lang.rawValue)", dir)

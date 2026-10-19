@@ -18,14 +18,13 @@ struct ContentView: View {
         VStack(spacing: 0) {
             header(l)
             Rectangle().fill(Theme.ink.opacity(0.15)).frame(height: 1)
-            #if os(iOS)
-            // iPhone: the familiar bottom tab bar.
-            TabView(selection: $tab) {
-                page(.draw).tabItem { Label(l.tabDraw, systemImage: "book") }.tag(Tab.draw)
-                page(.records).tabItem { Label(l.tabRecords, systemImage: "list.bullet") }.tag(Tab.records)
+            // Pages dissolve into each other instead of switching instantly.
+            ZStack {
+                if tab == .draw { page(.draw).transition(.opacity) }
+                if tab == .records { page(.records).transition(.opacity) }
             }
-            #else
-            page(tab)
+            #if os(iOS)
+            tabBar(l)
             #endif
         }
         .background(Theme.paper)
@@ -35,6 +34,7 @@ struct ContentView: View {
         .overlay {
             if showSplash {
                 SplashView(lang: language).transition(.opacity)
+                    .ignoresSafeArea()
                     .contentShape(Rectangle())
                     .onTapGesture { skipSplash = true }
             }
@@ -47,13 +47,13 @@ struct ContentView: View {
             // day's verse. A tap skips it.
             for _ in 0..<45 where !skipSplash { try? await Task.sleep(for: .milliseconds(100)) }
             bible = await loaded
-            withAnimation(.easeOut(duration: 0.6)) { showSplash = false }
+            withAnimation(.easeInOut(duration: 1.0)) { showSplash = false }
             if !guideSeen {
-                try? await Task.sleep(for: .seconds(0.6))
+                try? await Task.sleep(for: .seconds(1.0))
                 showGuide = true
             }
         }
-        .sheet(isPresented: $showGuide) {
+        .fadeCover(isPresented: $showGuide) {
             GuideView(lang: language) { guideSeen = true; showGuide = false }
         }
     }
@@ -67,10 +67,30 @@ struct ContentView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Theme.paper)
-        #if os(iOS)
-        .toolbarBackground(Theme.paper, for: .tabBar)
-        .toolbarBackground(.visible, for: .tabBar)
-        #endif
+    }
+
+    /// A quiet two-item bar in the book's type, instead of the system tab bar.
+    private func tabBar(_ l: L10n) -> some View {
+        HStack {
+            barItem(l.tabDraw, "book", .draw)
+            barItem(l.tabRecords, "clock", .records)
+        }
+        .padding(.top, 10)
+        .padding(.bottom, 4)
+        .overlay(alignment: .top) { Rectangle().fill(Theme.ink.opacity(0.12)).frame(height: 1) }
+        .background(Theme.paper)
+    }
+
+    private func barItem(_ title: String, _ icon: String, _ target: Tab) -> some View {
+        Button { withAnimation(Fade.animation) { tab = target } } label: {
+            VStack(spacing: 4) {
+                Image(systemName: icon).font(.system(size: 18, weight: .light))
+                Text(title).font(Theme.mincho(10))
+            }
+            .frame(maxWidth: .infinity)
+            .foregroundStyle(tab == target ? Theme.shu : Theme.inkFaint)
+        }
+        .buttonStyle(.plain)
     }
 
     private func header(_ l: L10n) -> some View {
@@ -97,7 +117,7 @@ struct ContentView: View {
     }
 
     private func tabButton(_ title: String, _ target: Tab) -> some View {
-        Button(title) { tab = target }
+        Button(title) { withAnimation(Fade.animation) { tab = target } }
             .buttonStyle(.plain)
             .font(Theme.mincho(14, bold: tab == target))
             .foregroundStyle(tab == target ? Theme.shu : Theme.inkFaint)
@@ -155,32 +175,38 @@ struct GuideContent: View {
 }
 
 /// Launch screen: the mark, the name and the tagline on plain paper, like a book's title page.
-/// The mark, then the tagline, then the name fade in one after another, so the pause reads as
-/// a breath before opening the book rather than a wait.
+/// The mark sits exactly at the centre of the screen, where the system launch screen already shows
+/// it, so the app's first moment and the splash are one continuous image. The tagline, then the
+/// name, fade in below it: a breath before opening the book rather than a wait.
 struct SplashView: View {
     let lang: AppLanguage
     var animated = true
     @State private var stage = 0
+    static let markSize: CGFloat = 132
 
     var body: some View {
         let l = L10n(lang: lang)
-        let shown = animated ? stage : 3
-        VStack(spacing: 28) {
-            Spacer()
-            TsujiMark().frame(width: 132, height: 132).opacity(shown >= 1 ? 1 : 0)
-            Text(l.tagline).font(Theme.mincho(lang == .ja ? 24 : 22, bold: true)).opacity(shown >= 2 ? 1 : 0)
-            Text(l.appName).font(Theme.mincho(18)).foregroundStyle(Theme.inkFaint).opacity(shown >= 3 ? 1 : 0)
-            Spacer()
-        }
-        .task {
-            guard animated else { return }
-            for next in 1...3 {
-                withAnimation(.easeOut(duration: 0.9)) { stage = next }
-                try? await Task.sleep(for: .seconds(0.9))
+        let shown = animated ? stage : 2
+        GeometryReader { geo in
+            ZStack {
+                Theme.paper
+                TsujiMark().frame(width: Self.markSize, height: Self.markSize)
+                    .position(x: geo.size.width / 2, y: geo.size.height / 2)
+                VStack(spacing: 22) {
+                    Text(l.tagline).font(Theme.mincho(lang == .ja ? 24 : 22, bold: true)).opacity(shown >= 1 ? 1 : 0)
+                    Text(l.appName).font(Theme.mincho(18)).foregroundStyle(Theme.inkFaint).opacity(shown >= 2 ? 1 : 0)
+                }
+                .position(x: geo.size.width / 2, y: geo.size.height / 2 + Self.markSize / 2 + 70)
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Theme.paper)
         .foregroundStyle(Theme.ink)
+        .task {
+            guard animated else { return }
+            try? await Task.sleep(for: .seconds(0.6))
+            for next in 1...2 {
+                withAnimation(.easeInOut(duration: 1.2)) { stage = next }
+                try? await Task.sleep(for: .seconds(1.1))
+            }
+        }
     }
 }

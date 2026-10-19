@@ -32,7 +32,6 @@ struct L10n {
     var writePlaceholder: String { t("書き込む…", "Write…") }
     var keep: String { t("残す", "Keep") }
     var strikeHint: String { t("書き込んだ行を押すと、線を引けます。", "Tap a line to strike it through.") }
-    func struckAt(_ time: String) -> String { t("線 \(time)", "struck \(time)") }
     var strikeTitle: String { t("考えが、変わりましたか。", "Has your mind changed?") }
     var strikeBody: String { t("線を引いても、文字は消えずに残ります。", "A line through it leaves the words in place.") }
     var restoreTitle: String { t("やはり、この考えに戻りますか。", "Back to this thought after all?") }
@@ -40,6 +39,8 @@ struct L10n {
     var strike: String { t("線を引く", "Strike through") }
     var restore: String { t("線を戻す", "Restore") }
     var leaveAsIs: String { t("そのままにする", "Leave it") }
+    var todayAlreadyOpen: String { t("今日の書は、もうひらかれています。", "Today the book has already been opened.") }
+    var openToday: String { t("今日の一節をひらく", "Open today’s verse") }
     func todayVerse(_ time: String) -> String { t("今日の一節　\(time) にひらいた", "Today’s verse · opened \(time)") }
     var done: String { t("書を閉じる", "Close the book") }
     var showContext: String { t("前後を読む", "Read around it") }
