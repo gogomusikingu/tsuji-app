@@ -1,4 +1,4 @@
-import AppKit
+import PhotosUI
 import SwiftUI
 import UniformTypeIdentifiers
 
@@ -18,6 +18,8 @@ struct MenuView: View {
     @State private var importing = false
     @State private var error: String?
     @State private var newItem = ""
+    @State private var photoItem: PhotosPickerItem?
+    @State private var showCamera = false
 
     var body: some View {
         let l = L10n(lang: lang)
@@ -38,6 +40,7 @@ struct MenuView: View {
             .frame(maxWidth: .infinity)
         }
         .scrollContentBackground(.hidden)
+        #if os(macOS)
         .fileImporter(isPresented: $importing, allowedContentTypes: [.image]) { result in
             if case .success(let url) = result { load(url) }
         }
@@ -47,6 +50,19 @@ struct MenuView: View {
             }
             return true
         }
+        #else
+        .onChange(of: photoItem) { _, item in
+            guard let item else { return }
+            Task {
+                if let data = try? await item.loadTransferable(type: Data.self) { load(data) }
+                photoItem = nil
+            }
+        }
+        .fullScreenCover(isPresented: $showCamera) {
+            CameraPicker { data in showCamera = false; if let data { load(data) } }
+                .ignoresSafeArea()
+        }
+        #endif
     }
 
     private func empty(_ l: L10n) -> some View {
@@ -58,8 +74,18 @@ struct MenuView: View {
                 ProgressView().controlSize(.small)
                 Text(l.menuReading).font(Theme.mincho(12)).foregroundStyle(Theme.inkFaint)
             } else {
+                #if os(macOS)
                 Button(l.menuChoosePhoto) { importing = true }.buttonStyle(InkButtonStyle(filled: true))
                 Text(l.menuDropHint).font(Theme.mincho(11)).foregroundStyle(Theme.inkFaint)
+                #else
+                if CameraPicker.isAvailable {
+                    Button(l.menuTakePhoto) { showCamera = true }.buttonStyle(InkButtonStyle(filled: true))
+                }
+                PhotosPicker(selection: $photoItem, matching: .images) {
+                    Text(l.menuFromLibrary)
+                }
+                .buttonStyle(InkButtonStyle(filled: !CameraPicker.isAvailable))
+                #endif
             }
         }
     }
@@ -69,11 +95,17 @@ struct MenuView: View {
             Text(l.menuCheck).font(Theme.mincho(14)).lineSpacing(5)
             VStack(alignment: .leading, spacing: 8) {
                 ForEach($candidates) { $c in
-                    Toggle(isOn: $c.included) {
-                        Text(c.name).font(Theme.mincho(15)).foregroundStyle(c.included ? Theme.ink : Theme.inkFaint)
-                            .strikethrough(!c.included, color: Theme.inkFaint)
+                    Button { c.included.toggle() } label: {
+                        HStack(spacing: 10) {
+                            Image(systemName: c.included ? "checkmark.square" : "square")
+                                .foregroundStyle(c.included ? Theme.shu : Theme.inkFaint)
+                            Text(c.name).font(Theme.mincho(15)).foregroundStyle(c.included ? Theme.ink : Theme.inkFaint)
+                                .strikethrough(!c.included, color: Theme.inkFaint)
+                            Spacer()
+                        }
+                        .contentShape(Rectangle())
                     }
-                    .toggleStyle(.checkbox)
+                    .buttonStyle(.plain)
                 }
             }
             .padding(20)
@@ -116,7 +148,12 @@ struct MenuView: View {
     private func load(_ url: URL) {
         let scoped = url.startAccessingSecurityScopedResource()
         defer { if scoped { url.stopAccessingSecurityScopedResource() } }
-        guard let image = NSImage(contentsOf: url)?.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
+        guard let data = try? Data(contentsOf: url) else { error = L10n(lang: lang).menuLoadFailed; return }
+        load(data)
+    }
+
+    private func load(_ data: Data) {
+        guard let image = Platform.cgImage(from: data) else {
             error = L10n(lang: lang).menuLoadFailed; return
         }
         error = nil
@@ -139,7 +176,7 @@ struct MenuView: View {
 
     private func decide() {
         picked = MenuPicker.pick(from: candidates.filter(\.included).map(\.name))
-        NSHapticFeedbackManager.defaultPerformer.perform(.levelChange, performanceTime: .now)
+        Platform.haptic()
     }
 
     private func reset() {
@@ -148,3 +185,35 @@ struct MenuView: View {
         error = nil
     }
 }
+
+#if os(iOS)
+/// The system camera, returning the photo as JPEG data (nil if cancelled).
+struct CameraPicker: UIViewControllerRepresentable {
+    static var isAvailable: Bool { UIImagePickerController.isSourceTypeAvailable(.camera) }
+
+    let onFinish: (Data?) -> Void
+
+    func makeUIViewController(context: Context) -> UIImagePickerController {
+        let picker = UIImagePickerController()
+        picker.sourceType = .camera
+        picker.delegate = context.coordinator
+        return picker
+    }
+
+    func updateUIViewController(_ controller: UIImagePickerController, context: Context) {}
+
+    func makeCoordinator() -> Coordinator { Coordinator(onFinish: onFinish) }
+
+    final class Coordinator: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+        let onFinish: (Data?) -> Void
+        init(onFinish: @escaping (Data?) -> Void) { self.onFinish = onFinish }
+
+        func imagePickerController(_ picker: UIImagePickerController,
+                                   didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
+            onFinish((info[.originalImage] as? UIImage)?.jpegData(compressionQuality: 0.9))
+        }
+
+        func imagePickerControllerDidCancel(_ picker: UIImagePickerController) { onFinish(nil) }
+    }
+}
+#endif

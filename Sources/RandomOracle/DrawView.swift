@@ -1,4 +1,3 @@
-import AppKit
 import Combine
 import SwiftUI
 
@@ -28,9 +27,17 @@ struct DrawView: View {
             case .revealed: revealed(l)
             }
         }
-        .padding(32)
+        .padding(Theme.screenPadding)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .onReceive(ticker) { now = $0 }
+        #if DEBUG
+        // Screenshot automation: TSUJI_AUTODRAW=1 opens the book right after launch.
+        .onAppear {
+            if ProcessInfo.processInfo.environment["TSUJI_AUTODRAW"] == "1", phase == .idle {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) { begin() }
+            }
+        }
+        #endif
     }
 
     private func idle(_ l: L10n) -> some View {
@@ -144,13 +151,16 @@ struct DrawView: View {
             showContext = false
             showOthers = false
             phase = .revealed
-            NSHapticFeedbackManager.defaultPerformer.perform(.levelChange, performanceTime: .now)
+            Platform.haptic()
             withAnimation(.easeOut(duration: 1.2)) { pageAngle = 0 }
         }
     }
 
     private func finish() {
-        if let entry { journal.upsert(entry) }
+        if let entry {
+            journal.upsert(entry)
+            Followup.schedule(for: entry, lang: lang)
+        }
         entry = nil
         now = Date()
         phase = .idle

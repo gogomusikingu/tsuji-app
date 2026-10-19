@@ -18,6 +18,10 @@ struct L10n {
     var menuIntro: String { t("メニューが決められないときは、写真を撮るだけ。\n書かれた品から、ひとつを無作為に選びます。",
                               "Can’t choose from the menu? Just take a photo.\nOne dish is picked at random.") }
     var menuChoosePhoto: String { t("メニューの写真を選ぶ", "Choose a menu photo") }
+    var menuTakePhoto: String { t("メニューを撮る", "Take a photo") }
+    var menuFromLibrary: String { t("写真から選ぶ", "Choose from Photos") }
+    var followupTitle: String { t("辻", "Sortes") }
+    var followupBody: String { t("数日前に書をひらいた迷いは、その後どうなりましたか？", "A few days ago you opened the book. How did it turn out?") }
     var menuDropHint: String { t("写真をここにドラッグしても読み込めます", "You can also drop a photo here") }
     var menuReading: String { t("文字を読み取っています…", "Reading the menu…") }
     var menuCheck: String { t("読み取った品です。料理でないものはチェックを外してください。", "Dishes found. Untick anything that isn’t a dish.") }

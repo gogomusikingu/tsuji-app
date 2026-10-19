@@ -69,7 +69,19 @@
   macOS 26 SDK を指定してビルドする（`tools/run_mac.sh`）。テストは Swift Testing（XCTest は Xcode が必要）。
   テストファイルを変更した直後の1回目は「TestingMacros が見つからない」と失敗することがあり、もう一度実行すると通る
 
-### 4.2 ディレクトリ構成
+### 4.2 iPhone 版（2026-10-19 移植）
+- `ios/Tsuji.xcodeproj`: Mac 試作版と同じ `Sources/RandomOracle` のコードをそのまま使う（Xcode のフォルダ同期機能）。
+  Mac / iPhone の違いは `#if os(...)` と `Platform.swift` で吸収
+- iPhone 独自: 画面下のタブバー、メニューはカメラ撮影または写真ライブラリから読み込み、
+  書を閉じてから3日後に「その後どうなりましたか？」の通知（`Followup.swift`）
+- アプリ表示名「辻」、バンドル ID `com.gogomusikingu.tsuji`、iOS 17 以上、iPhone 縦向きのみ。
+  アイコンは辻マークから生成（`ios/Tsuji/Assets.xcassets`）
+- シミュレーター: iOS 27.1（この環境で作成できる端末は iPhone Duo のみ）。Simulator の画面アプリが Xcode に見当たらないため、
+  操作して確認するときは Xcode でプロジェクトを開いて ▶ を押す
+- 確認用: Debug ビルドで環境変数 `TSUJI_AUTODRAW=1` を付けて起動すると自動で書をひらく（スクリーンショット用）
+- 保存は試作版と同じ JSON、画面文字も同じ表のまま（SwiftData・String Catalog への移行は必要になってから）
+
+### 4.3 ディレクトリ構成
 ```
 Package.swift
 Sources/RandomOracle/        アプリ本体（App / ContentView / DrawView / MenuView / MenuPicker / RecordsView / Bible / Journal / Cooldown / Language / Examples / Theme / Previews）
@@ -77,6 +89,9 @@ Sources/RandomOracle/Resources/bible.tsv   聖書本文（書・章・節・日�
 Tests/RandomOracleTests/     テスト
 tools/build_bible.py         eBible.org のデータから bible.tsv を作る
 tools/run_mac.sh             Mac 試作版のビルドと起動
+tools/run_ios.sh             iPhone 版をビルドしてシミュレーターで起動（画面なし）
+ios/                         iPhone 版の Xcode プロジェクトとアイコン
+iPhone版を起動.command        Xcode で iPhone 版を開く
 samples/menu_sample.png      メニュー機能のお試し用画像
 試作版を起動.command          ダブルクリック用の起動ショートカット（待ち時間10秒）
 ```
@@ -142,7 +157,7 @@ samples/menu_sample.png      メニュー機能のお試し用画像
 
 ## 9. TODO
 - [x] Xcode をインストールする（Xcode 27.1。xcode-select は Command Line Tools のままなので、使うときは `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer` を指定）
-- [ ] iOS シミュレーターを入れる（約8GB のダウンロード。Wi-Fi 環境で）
+- [x] iOS シミュレーターを入れる（iOS 27.1）
 - [ ] Apple Developer Program に登録する（公開前。年 99 ドル）
 - [ ] 日本語訳を決める（フリーダム・バイブルの訳の質を読んで確認／口語訳の利用条件を確認）
 - [x] Mac 試作版: 3.1 書を開く、3.2 振り返り（直後・後から記入）、日本語/英語切替
@@ -151,7 +166,10 @@ samples/menu_sample.png      メニュー機能のお試し用画像
 - [x] 試作版の画面に、名前・配色・初回説明（万葉集の歌）を反映する
 - [ ] デザインを実際に見て確認する（ユーザー作業）
 - [x] Mac 試作版: 3.4 メニュー
-- [ ] iPhone 版へ移植（カメラ撮影、数日後の通知、SwiftData、String Catalog を含む）→ 3.3 シェア（後回し）
+- [x] iPhone 版へ移植（カメラ撮影・写真から選ぶ、3日後の通知）
+- [ ] iPhone 版を Xcode で操作して確認する（ユーザー作業）
+- [ ] 実機で確認する（カメラ・振動。Xcode に Apple ID の登録が必要）
+- [ ] 3.3 シェア（後回し）
 
 ## 10. 変更履歴
 - 2026-10-19 方針相談をもとに初版を作成（日本語・英語の2言語対応を含む）
@@ -164,3 +182,4 @@ samples/menu_sample.png      メニュー機能のお試し用画像
 - 2026-10-19 試作版にデザインを反映（配色・明朝体・辻マーク・栞・万葉集の初回説明）
 - 2026-10-19 起動画面（アプリ名とマーク）を追加
 - 2026-10-19 メニュー機能（写真から文字を読み取り、1品を無作為に選ぶ）を追加
+- 2026-10-19 iPhone 版へ移植（Xcode プロジェクト、カメラ/写真読み込み、3日後の通知、アプリアイコン）

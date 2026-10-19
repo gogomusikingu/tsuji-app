@@ -27,7 +27,7 @@ final class Bible {
     }
 
     static func bundled() -> Bible {
-        guard let url = Bundle.module.url(forResource: "bible", withExtension: "tsv"),
+        guard let url = Platform.resourceBundle.url(forResource: "bible", withExtension: "tsv"),
               let tsv = try? String(contentsOf: url, encoding: .utf8) else {
             fatalError("bible.tsv is missing from the bundle")
         }

@@ -28,3 +28,9 @@ RANDOM_ORACLE_COOLDOWN=10 ./tools/run_mac.sh
 ## 聖書データ
 eBible.org のパブリックドメイン訳を使用（日本語: フリーダム・バイブル、英語: World English Bible）。
 作り直す場合は `tools/build_bible.py` を参照。
+
+## iPhone 版の起動（シミュレーター）
+1. Finder で `iPhone版を起動.command` をダブルクリックする（Xcode でプロジェクトが開く）
+2. Xcode 上部の端末選択で iPhone のシミュレーターを選び、▶（Run）を押す
+
+ターミナルから画面なしでビルド・起動だけ確認する場合は `./tools/run_ios.sh`。

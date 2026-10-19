@@ -1,18 +1,25 @@
-import AppKit
 import SwiftUI
+#if os(macOS)
+import AppKit
+#endif
 
 @main
-struct RandomOracleApp: App {
+struct TsujiApp: App {
+    #if os(macOS)
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
+    #endif
 
     var body: some Scene {
         WindowGroup("辻") {
             ContentView()
+                #if os(macOS)
                 .frame(minWidth: 520, minHeight: 640)
+                #endif
         }
     }
 }
 
+#if os(macOS)
 /// Needed when launched via `swift run` (no app bundle) so the window comes to the front.
 final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -23,3 +30,4 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { true }
 }
+#endif

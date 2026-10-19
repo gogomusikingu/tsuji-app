@@ -16,11 +16,16 @@ struct ContentView: View {
         VStack(spacing: 0) {
             header(l)
             Rectangle().fill(Theme.ink.opacity(0.15)).frame(height: 1)
-            switch tab {
-            case .draw: DrawView(bible: bible, journal: journal, lang: language)
-            case .menu: MenuView(lang: language)
-            case .records: RecordsView(journal: journal, lang: language)
+            #if os(iOS)
+            // iPhone: the familiar bottom tab bar.
+            TabView(selection: $tab) {
+                page(.draw).tabItem { Label(l.tabDraw, systemImage: "book") }.tag(Tab.draw)
+                page(.menu).tabItem { Label(l.tabMenu, systemImage: "menucard") }.tag(Tab.menu)
+                page(.records).tabItem { Label(l.tabRecords, systemImage: "list.bullet") }.tag(Tab.records)
             }
+            #else
+            page(tab)
+            #endif
         }
         .background(Theme.paper)
         .foregroundStyle(Theme.ink)
@@ -45,6 +50,22 @@ struct ContentView: View {
         }
     }
 
+    private func page(_ target: Tab) -> some View {
+        Group {
+            switch target {
+            case .draw: DrawView(bible: bible, journal: journal, lang: language)
+            case .menu: MenuView(lang: language)
+            case .records: RecordsView(journal: journal, lang: language)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Theme.paper)
+        #if os(iOS)
+        .toolbarBackground(Theme.paper, for: .tabBar)
+        .toolbarBackground(.visible, for: .tabBar)
+        #endif
+    }
+
     private func header(_ l: L10n) -> some View {
         HStack(spacing: 14) {
             TsujiMark().frame(width: 30, height: 30)
@@ -53,10 +74,12 @@ struct ContentView: View {
                 Text(l.tagline).font(Theme.mincho(11)).foregroundStyle(Theme.inkFaint)
             }
             Spacer()
+            #if os(macOS)
             tabButton(l.tabDraw, .draw)
             tabButton(l.tabMenu, .menu)
             tabButton(l.tabRecords, .records)
             Divider().frame(height: 16)
+            #endif
             Button(language == .ja ? "EN" : "日本語") { language = language == .ja ? .en : .ja }
                 .buttonStyle(.plain).font(Theme.mincho(12)).foregroundStyle(Theme.inkFaint)
             Button { showGuide = true } label: { Image(systemName: "questionmark.circle") }
@@ -86,7 +109,9 @@ struct GuideView: View {
             HStack { Spacer(); Button(l.guideStart, action: onClose).buttonStyle(InkButtonStyle(filled: true)) }
         }
         .padding(32)
+        #if os(macOS)
         .frame(width: 580, height: 680)
+        #endif
         .background(Theme.paper)
         .foregroundStyle(Theme.ink)
         .preferredColorScheme(.light)

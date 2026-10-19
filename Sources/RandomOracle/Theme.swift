@@ -8,6 +8,14 @@ enum Theme {
     static let inkFaint = Color(red: 0.169, green: 0.161, blue: 0.153).opacity(0.55)
     static let shu = Color(red: 0.776, green: 0.278, blue: 0.188)        // 朱
 
+    #if os(iOS)
+    static let screenPadding: CGFloat = 18
+    static let pagePadding: CGFloat = 26
+    #else
+    static let screenPadding: CGFloat = 32
+    static let pagePadding: CGFloat = 40
+    #endif
+
     /// Hiragino Mincho ships with both macOS and iOS and covers Latin text as well.
     static func mincho(_ size: CGFloat, bold: Bool = false) -> Font {
         .custom(bold ? "HiraMinProN-W6" : "HiraMinProN-W3", size: size)
