@@ -45,6 +45,8 @@ struct TsujiMark: View {
     /// Drops the icon's built-in margin so the book fills the frame (for use beside text).
     /// The app icon and the launch screen keep the margin.
     var tight = false
+    /// 0...1: how far the vermilion verse line has surfaced on the page.
+    var verse: Double = 1
 
     var body: some View {
         Canvas { ctx, size in
@@ -83,10 +85,10 @@ struct TsujiMark: View {
             ctx.stroke(outline, with: .color(ink), style: StrokeStyle(lineWidth: 36, lineCap: .round, lineJoin: .round))
             ctx.stroke(inner, with: .color(ink), style: StrokeStyle(lineWidth: 10, lineCap: .round, lineJoin: .round))
 
-            var verse = Path()
-            verse.move(to: p(70, 395))
-            verse.addLine(to: p(240, 395))
-            ctx.stroke(verse, with: .color(accent), style: StrokeStyle(lineWidth: 22, lineCap: .round))
+            var verseLine = Path()
+            verseLine.move(to: p(70, 395))
+            verseLine.addLine(to: p(240, 395))
+            ctx.stroke(verseLine, with: .color(accent.opacity(self.verse)), style: StrokeStyle(lineWidth: 22, lineCap: .round))
         }
         .aspectRatio(1, contentMode: .fit)
     }
@@ -110,6 +112,14 @@ struct TsujiMark: View {
             let t = start + sweep * CGFloat(i) / CGFloat(steps)
             path.addLine(to: CGPoint(x: o.x + r * cos(t), y: o.y + r * sin(t)))
         }
+    }
+}
+
+// Lets the verse line fade in smoothly when `verse` changes inside an animation.
+extension TsujiMark: Animatable {
+    var animatableData: Double {
+        get { verse }
+        set { verse = newValue }
     }
 }
 

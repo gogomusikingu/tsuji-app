@@ -57,6 +57,8 @@ extension EnvironmentValues {
 struct CenterStage<Below: View>: View {
     static var markSize: CGFloat { 130 }
     @Environment(\.windowSize) private var window
+    /// Strength of the verse line on the mark (the opening ritual brings it up from nothing).
+    var verse: Double = 1
     @ViewBuilder var below: () -> Below
 
     var body: some View {
@@ -67,7 +69,7 @@ struct CenterStage<Below: View>: View {
                 ? CGPoint(x: geo.size.width / 2, y: geo.size.height / 2)
                 : CGPoint(x: window.width / 2 - frame.minX, y: window.height / 2 - frame.minY)
             ZStack(alignment: .top) {
-                TsujiMark(tight: true)
+                TsujiMark(tight: true, verse: verse)
                     .frame(width: Self.markSize, height: Self.markSize)
                     .position(centre)
                 below()

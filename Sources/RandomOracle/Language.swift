@@ -17,11 +17,11 @@ struct L10n {
     var followupTitle: String { t("辻", "Sortes") }
     var followupBody: String { t("数日前に書をひらいた迷いは、その後どうなりましたか？", "A few days ago you opened the book. How did it turn out?") }
     var tabRecords: String { t("記録", "Journal") }
-    var intro: String { t("迷いをひとつ、心に思い浮かべてください。\n書は無作為にひらかれます。\n引き直しはできません。",
+    var intro: String { t("迷いをひとつ、心に思い浮かべてください\n書は無作為にひらかれます\n引き直しはできません",
                           "Hold one dilemma in your mind.\nThe book opens at random.\nThere is no second draw.") }
     var openButton: String { t("書をひらく", "Open the book") }
     var focusing: String { t("目を閉じて、迷いを思い浮かべて…", "Close your eyes and hold your dilemma…") }
-    var focusingOpen: String { t("書が、ひらかれます。", "The book opens.") }
+    var focusingOpen: String { t("書が、ひらかれます", "The book opens") }
     var step1: String { t("いちばん目に止まった言葉はどれですか？", "Which words caught your eye first?") }
     var step2: String { t("その言葉を、あなたの迷いに置き換えるとしたら？", "If those words were about your dilemma, what would they mean?") }
     var step3: String { t("では、どうしますか？", "So, what will you do?") }
@@ -40,7 +40,7 @@ struct L10n {
     var strike: String { t("線を引く", "Strike through") }
     var restore: String { t("線を戻す", "Restore") }
     var leaveAsIs: String { t("そのままにする", "Leave it") }
-    var todayAlreadyOpen: String { t("今日の書は、もうひらかれました。", "Today the book has already been opened.") }
+    var todayAlreadyOpen: String { t("今日の書は、もうひらかれました", "Today the book has already been opened") }
     var openToday: String { t("今日の一節を読み返す", "Read today’s verse again") }
     var todayTitle: String { t("今日の一節", "Today’s verse") }
     var done: String { t("書を閉じる", "Close the book") }

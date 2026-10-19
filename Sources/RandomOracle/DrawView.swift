@@ -13,7 +13,8 @@ struct DrawView: View {
     @State private var pageAngle: Double = 90
     /// 0: silence, 1: "close your eyes…", 2: "the book opens."
     @State private var focusStage = 0
-    @State private var breathe = false
+    /// The verse line on the mark during the pause: 0 at first, rising to 1.
+    @State private var verseRise = 0.0
     @State private var step = 0
     @State private var showContext = false
     @State private var showOthers = false
@@ -123,22 +124,15 @@ struct DrawView: View {
         }
     }
 
+    /// The pause before the page turns. The mark stays exactly where it was and does not move;
+    /// only the verse line on its page surfaces, slowly, as the words below change.
     private func focusing(_ l: L10n) -> some View {
-        VStack(spacing: 28) {
-            Spacer()
-            // The mark breathes slowly while the user holds the dilemma in mind.
-            TsujiMark(tight: true).frame(width: 110, height: 110)
-                .opacity(breathe ? 0.75 : 0.35)
-                .scaleEffect(breathe ? 1.04 : 0.96)
-                .animation(.easeInOut(duration: 2.2).repeatForever(autoreverses: true), value: breathe)
-                .onAppear { breathe = true }
-                .onDisappear { breathe = false }
+        CenterStage(verse: verseRise) {
             ZStack {
                 Text(l.focusing).opacity(focusStage == 1 ? 1 : 0)
                 Text(l.focusingOpen).opacity(focusStage == 2 ? 1 : 0)
             }
             .font(Theme.mincho(15)).foregroundStyle(Theme.inkFaint)
-            Spacer()
         }
     }
 
@@ -217,7 +211,9 @@ struct DrawView: View {
         journal.upsert(drawn)
         entryID = drawn.id
         focusStage = 0
+        verseRise = 0
         withAnimation(Fade.animation) { phase = .focusing }
+        withAnimation(.easeInOut(duration: 5.5).delay(0.6)) { verseRise = 1 }
         // About six seconds of quiet before the page turns: words surface one at a time.
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { withAnimation(.easeInOut(duration: 1.2)) { focusStage = 1 } }
         DispatchQueue.main.asyncAfter(deadline: .now() + 4.0) { withAnimation(.easeInOut(duration: 1.2)) { focusStage = 2 } }
