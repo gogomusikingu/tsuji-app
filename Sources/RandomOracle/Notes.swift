@@ -9,6 +9,10 @@ enum NoteTime {
         return f
     }()
     static func short(_ date: Date) -> String { formatter.string(from: date) }
+    static func clock(_ date: Date) -> String {
+        let f = DateFormatter(); f.locale = Locale(identifier: "en_US_POSIX"); f.dateFormat = "HH:mm"
+        return f.string(from: date)
+    }
 }
 
 extension NoteKind {

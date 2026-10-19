@@ -10,6 +10,8 @@ struct ContentView: View {
     @State private var skipSplash = false
     /// Loaded off the main thread while the splash is up, so launch does not stall on 31k verses.
     @State private var bible: Bible?
+    /// Full window size, so the mark can sit at the exact screen centre wherever it is drawn.
+    @State private var windowSize: CGSize = .zero
 
     enum Tab { case draw, records }
 
@@ -31,6 +33,11 @@ struct ContentView: View {
         .foregroundStyle(Theme.ink)
         .tint(Theme.shu)
         .preferredColorScheme(.light)
+        .background(GeometryReader { g in
+            Color.clear
+                .onAppear { windowSize = g.size }
+                .onChange(of: g.size) { _, size in windowSize = size }
+        }.ignoresSafeArea())
         .overlay {
             if showSplash {
                 SplashView(lang: language).transition(.opacity)
@@ -60,6 +67,7 @@ struct ContentView: View {
         .fadeCover(isPresented: $showGuide) {
             GuideView(lang: language) { guideSeen = true; showGuide = false }
         }
+        .environment(\.windowSize, windowSize)
     }
 
     private func page(_ target: Tab) -> some View {
@@ -102,7 +110,6 @@ struct ContentView: View {
 
     private func header(_ l: L10n) -> some View {
         HStack(spacing: 10) {
-            TsujiMark(tight: true).frame(width: 40, height: 40)
             VStack(alignment: .leading, spacing: 2) {
                 // The tagline leads: it says what the app does; the name alone would not.
                 Text(l.tagline).font(Theme.mincho(15, bold: true)).lineLimit(1).minimumScaleFactor(0.8)
@@ -189,22 +196,14 @@ struct SplashView: View {
     let lang: AppLanguage
     var animated = true
     @State private var stage = 0
-    static let markSize: CGFloat = 132
 
     var body: some View {
         let l = L10n(lang: lang)
         let shown = animated ? stage : 2
-        // Paper behind everything, edge to edge, independent of how the overlay is sized.
-        GeometryReader { geo in
-            ZStack {
-                Theme.paper
-                TsujiMark().frame(width: Self.markSize, height: Self.markSize)
-                    .position(x: geo.size.width / 2, y: geo.size.height / 2)
-                VStack(spacing: 22) {
-                    Text(l.tagline).font(Theme.mincho(lang == .ja ? 24 : 22, bold: true)).opacity(shown >= 1 ? 1 : 0)
-                    Text(l.appName).font(Theme.mincho(18)).foregroundStyle(Theme.inkFaint).opacity(shown >= 2 ? 1 : 0)
-                }
-                .position(x: geo.size.width / 2, y: geo.size.height / 2 + Self.markSize / 2 + 70)
+        CenterStage {
+            VStack(spacing: 22) {
+                Text(l.tagline).font(Theme.mincho(lang == .ja ? 24 : 22, bold: true)).opacity(shown >= 1 ? 1 : 0)
+                Text(l.appName).font(Theme.mincho(18)).foregroundStyle(Theme.inkFaint).opacity(shown >= 2 ? 1 : 0)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)

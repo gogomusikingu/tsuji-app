@@ -53,51 +53,26 @@ struct RecordsView: View {
     }
 }
 
-/// One day: laid out like today's verse at home, with the date above it.
+/// One day: the same page as today's verse at home, titled with its date.
 private struct DayPage: View {
     let entry: JournalEntry
     @ObservedObject var journal: Journal
     let lang: AppLanguage
     let bible: Bible?
     @State private var sharing = false
-    @State private var showContext = false
 
     var body: some View {
-        let l = L10n(lang: lang)
-        ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
-                HStack(alignment: .firstTextBaseline) {
-                    Text(Self.format(lang == .ja ? "yyyy年M月d日（E）" : "EEEE, MMMM d, yyyy", entry.date, lang))
-                        .font(Theme.mincho(15))
-                    Spacer()
-                    Text(l.openedAt(Self.format("HH:mm", entry.date, lang)))
-                        .font(Theme.mincho(11)).foregroundStyle(Theme.inkFaint)
-                }
-                if let bible {
-                    VersePage(bible: bible, verse: entry.verse, lang: lang, showContext: $showContext)
-                } else {
-                    Text(entry.verse.text(lang)).font(Theme.verse(21)).lineSpacing(12)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-                NotesDisclosure(entryID: entry.id, journal: journal, lang: lang)
-                HStack {
-                    Button { sharing = true } label: { Label(l.share, systemImage: "square.and.arrow.up") }
-                        .buttonStyle(.plain).font(Theme.mincho(13)).foregroundStyle(Theme.shu)
-                    Spacer()
-                }
+        VerseDay(title: Self.date(entry.date, lang), entry: entry, journal: journal, lang: lang, bible: bible,
+                 onShare: { sharing = true }) { EmptyView() }
+            .fadeCover(isPresented: $sharing) {
+                ShareSheet(entry: journal.entry(entry.id) ?? entry, lang: lang) { sharing = false }
             }
-            .padding(8)
-        }
-        .scrollContentBackground(.hidden)
-        .fadeCover(isPresented: $sharing) {
-            ShareSheet(entry: journal.entry(entry.id) ?? entry, lang: lang) { sharing = false }
-        }
     }
 
-    static func format(_ pattern: String, _ date: Date, _ lang: AppLanguage) -> String {
+    static func date(_ date: Date, _ lang: AppLanguage) -> String {
         let f = DateFormatter()
         f.locale = Locale(identifier: lang == .ja ? "ja_JP" : "en_US")
-        f.dateFormat = pattern
+        f.dateFormat = lang == .ja ? "yyyy年M月d日（E）" : "EEEE, MMMM d, yyyy"
         return f.string(from: date)
     }
 }

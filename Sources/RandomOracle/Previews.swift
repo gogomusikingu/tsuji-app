@@ -22,13 +22,13 @@ enum PreviewRenderer {
            let png = rep.representation(using: .png, properties: [:]) {
             try? png.write(to: dir.appendingPathComponent("AppIcon.png"))
         }
-        // System launch screen image: the mark alone on transparency, at SplashView's size.
+        // System launch screen image: the mark alone on transparency, at the size CenterStage shows it.
         for scale in 1...3 {
-            let r = ImageRenderer(content: TsujiMark().frame(width: SplashView.markSize, height: SplashView.markSize))
+            let r = ImageRenderer(content: TsujiMark(tight: true).frame(width: CenterStage<EmptyView>.markSize, height: CenterStage<EmptyView>.markSize))
             r.scale = CGFloat(scale)
             if let tiff = r.nsImage?.tiffRepresentation, let rep = NSBitmapImageRep(data: tiff),
                let png = rep.representation(using: .png, properties: [:]) {
-                try? png.write(to: dir.appendingPathComponent("LaunchBook@\(scale)x.png"))
+                try? png.write(to: dir.appendingPathComponent("LaunchStage@\(scale)x.png"))
             }
         }
         for lang in AppLanguage.allCases {
@@ -56,7 +56,7 @@ enum PreviewRenderer {
             // Home while the book is closed for the day (body of the scroll view, without the scroll view).
             let l = L10n(lang: lang)
             render(VStack(alignment: .leading, spacing: 18) {
-                Text(l.todayVerse(NoteTime.short(shared.date))).font(Theme.mincho(11)).foregroundStyle(Theme.inkFaint)
+                Text(l.todayTitle).font(Theme.mincho(15))
                 VersePage(bible: bible, verse: verse, lang: lang, showContext: .constant(false))
                 NotesDisclosure(entryID: shared.id, journal: notesJournal, lang: lang)
                 Text(l.nextDraw("23:12:05")).font(Theme.mincho(12)).foregroundStyle(Theme.inkFaint).frame(maxWidth: .infinity)

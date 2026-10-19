@@ -9,6 +9,21 @@ struct TsujiApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     #endif
 
+    #if DEBUG
+    init() {
+        // Testing: each new build (e.g. pressing Run in Xcode) may open the book again,
+        // without waiting out the day. Release builds never do this.
+        guard let exe = Bundle.main.executableURL,
+              let built = (try? FileManager.default.attributesOfItem(atPath: exe.path))?[.modificationDate] as? Date
+        else { return }
+        let key = "debugBuildDate"
+        if UserDefaults.standard.object(forKey: key) as? Date != built {
+            UserDefaults.standard.removeObject(forKey: "lastDrawAt")
+            UserDefaults.standard.set(built, forKey: key)
+        }
+    }
+    #endif
+
     var body: some Scene {
         WindowGroup("辻") {
             ContentView()

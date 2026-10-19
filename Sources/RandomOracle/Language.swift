@@ -42,7 +42,7 @@ struct L10n {
     var leaveAsIs: String { t("そのままにする", "Leave it") }
     var todayAlreadyOpen: String { t("今日の書は、もうひらかれました。", "Today the book has already been opened.") }
     var openToday: String { t("今日の一節を読み返す", "Read today’s verse again") }
-    func todayVerse(_ time: String) -> String { t("今日の一節　\(time) にひらいた", "Today’s verse · opened \(time)") }
+    var todayTitle: String { t("今日の一節", "Today’s verse") }
     var done: String { t("書を閉じる", "Close the book") }
     var showContext: String { t("前後を読む", "Read around it") }
     var hideContext: String { t("この一節だけにする", "Show this verse only") }

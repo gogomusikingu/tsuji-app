@@ -71,66 +71,55 @@ struct DrawView: View {
         }
     }
 
-    /// The book is closed for today; today's verse can be opened again from here.
-    private func closedHome(remaining: TimeInterval, _ l: L10n) -> some View {
-        VStack(spacing: 36) {
-            Spacer()
-            TsujiMark(tight: true).frame(width: 150, height: 150)
-            Text(l.todayAlreadyOpen)
-                .font(Theme.mincho(16))
-                .multilineTextAlignment(.center)
-                .lineSpacing(10)
-            Button(l.openToday) { withAnimation(Fade.animation) { showToday = true } }
-                .buttonStyle(InkButtonStyle())
+    private func todayPage(_ today: JournalEntry, remaining: TimeInterval, _ l: L10n) -> some View {
+        VerseDay(title: l.todayTitle, entry: today, journal: journal, lang: lang, bible: bible,
+                 onShare: { share(journal.entry(today.id)) }) {
             Text(l.nextDraw(Cooldown.format(remaining)))
-                .font(Theme.mincho(13).monospacedDigit())
+                .font(Theme.mincho(12).monospacedDigit())
                 .foregroundStyle(Theme.inkFaint)
-            Spacer()
-            Text(l.disclaimer).font(Theme.mincho(11)).foregroundStyle(Theme.inkFaint)
+                .frame(maxWidth: .infinity)
+                .padding(.top, 12)
         }
     }
 
-    /// While the book is closed for the day: today's verse stays open for going back over it.
-    private func todayPage(_ today: JournalEntry, remaining: TimeInterval, _ l: L10n) -> some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
-                Text(l.todayVerse(NoteTime.short(today.date)))
-                    .font(Theme.mincho(11)).foregroundStyle(Theme.inkFaint)
-                VersePage(bible: bible, verse: today.verse, lang: lang, showContext: $showContext)
-                NotesDisclosure(entryID: today.id, journal: journal, lang: lang)
-                HStack {
-                    Button { share(journal.entry(today.id)) } label: { Label(l.share, systemImage: "square.and.arrow.up") }
-                        .buttonStyle(.plain).font(Theme.mincho(13)).foregroundStyle(Theme.shu)
-                    Spacer()
+    /// The book is closed for today; today's verse can be read again from here.
+    private func closedHome(remaining: TimeInterval, _ l: L10n) -> some View {
+        VStack(spacing: 0) {
+            CenterStage {
+                VStack(spacing: 18) {
+                    Text(l.todayAlreadyOpen)
+                        .font(Theme.mincho(16))
+                        .multilineTextAlignment(.center)
+                        .lineSpacing(10)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Button(l.openToday) { withAnimation(Fade.animation) { showToday = true } }
+                        .buttonStyle(InkButtonStyle())
+                    Text(l.nextDraw(Cooldown.format(remaining)))
+                        .font(Theme.mincho(13).monospacedDigit())
+                        .foregroundStyle(Theme.inkFaint)
                 }
-                Text(l.nextDraw(Cooldown.format(remaining)))
-                    .font(Theme.mincho(12).monospacedDigit())
-                    .foregroundStyle(Theme.inkFaint)
-                    .frame(maxWidth: .infinity)
-                    .padding(.top, 12)
             }
-            .padding(8)
         }
-        .scrollContentBackground(.hidden)
     }
 
     private func intro(_ l: L10n, remaining: TimeInterval) -> some View {
-        VStack(spacing: 36) {
-            Spacer()
-            TsujiMark(tight: true).frame(width: 150, height: 150)
-            Text(l.intro)
-                .font(Theme.mincho(16))
-                .multilineTextAlignment(.center)
-                .lineSpacing(10)
-            if remaining > 0 {
-                Text(l.nextDraw(Cooldown.format(remaining)))
-                    .font(Theme.mincho(13).monospacedDigit())
-                    .foregroundStyle(Theme.inkFaint)
-            } else {
-                Button(l.openButton, action: begin).buttonStyle(InkButtonStyle(filled: true))
+        VStack(spacing: 0) {
+            CenterStage {
+                VStack(spacing: 18) {
+                    Text(l.intro)
+                        .font(Theme.mincho(16))
+                        .multilineTextAlignment(.center)
+                        .lineSpacing(10)
+                        .fixedSize(horizontal: false, vertical: true)
+                    if remaining > 0 {
+                        Text(l.nextDraw(Cooldown.format(remaining)))
+                            .font(Theme.mincho(13).monospacedDigit())
+                            .foregroundStyle(Theme.inkFaint)
+                    } else {
+                        Button(l.openButton, action: begin).buttonStyle(InkButtonStyle(filled: true))
+                    }
+                }
             }
-            Spacer()
-            Text(l.disclaimer).font(Theme.mincho(11)).foregroundStyle(Theme.inkFaint)
         }
     }
 
