@@ -16,6 +16,10 @@ enum FixedExamples {
 
     static func all(_ lang: AppLanguage) -> [Item] { lang == .ja ? ja : en }
 
+    static func caption(_ item: Item, _ lang: AppLanguage) -> String {
+        lang == .ja ? "\(item.verse)（\(item.ref)）" : "\(item.verse) (\(item.ref))"
+    }
+
     private static let ja: [Item] = [
         ("そのとき弟子たちは、イエスが用心するように言われたのはパンに入れるパン種のことではなく、パリサイ人とサドカイ人の教えのことだと理解した。", "マタイによる福音書 16章12節",
          ReadingExample(worry: "転職するか迷っている", words: "パンのことではなく、教えのことだった",

@@ -2,55 +2,106 @@ import SwiftUI
 
 struct ContentView: View {
     @AppStorage("language") private var language: AppLanguage = .ja
-    @StateObject private var journal = Journal()
     @AppStorage("guideSeen") private var guideSeen = false
+    @StateObject private var journal = Journal()
     @State private var showGuide = false
+    @State private var tab: Tab = .draw
     private let bible = Bible.bundled()
+
+    enum Tab { case draw, records }
 
     var body: some View {
         let l = L10n(lang: language)
-        TabView {
-            DrawView(bible: bible, journal: journal, lang: language)
-                .tabItem { Text(l.tabDraw) }
-            RecordsView(journal: journal, lang: language)
-                .tabItem { Text(l.tabRecords) }
+        VStack(spacing: 0) {
+            header(l)
+            Rectangle().fill(Theme.ink.opacity(0.15)).frame(height: 1)
+            switch tab {
+            case .draw: DrawView(bible: bible, journal: journal, lang: language)
+            case .records: RecordsView(journal: journal, lang: language)
+            }
         }
-        .padding()
+        .background(Theme.paper)
+        .foregroundStyle(Theme.ink)
+        .tint(Theme.shu)
+        .preferredColorScheme(.light)
         .onAppear { if !guideSeen { showGuide = true } }
         .sheet(isPresented: $showGuide) {
             GuideView(lang: language) { guideSeen = true; showGuide = false }
         }
-        .toolbar {
-            Button { showGuide = true } label: { Image(systemName: "questionmark.circle") }
-            Picker("", selection: $language) {
-                ForEach(AppLanguage.allCases) { Text($0.label).tag($0) }
+    }
+
+    private func header(_ l: L10n) -> some View {
+        HStack(spacing: 14) {
+            TsujiMark().frame(width: 30, height: 30)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(l.appName).font(Theme.mincho(20, bold: true))
+                Text(l.tagline).font(Theme.mincho(11)).foregroundStyle(Theme.inkFaint)
             }
-            .pickerStyle(.segmented)
+            Spacer()
+            tabButton(l.tabDraw, .draw)
+            tabButton(l.tabRecords, .records)
+            Divider().frame(height: 16)
+            Button(language == .ja ? "EN" : "日本語") { language = language == .ja ? .en : .ja }
+                .buttonStyle(.plain).font(Theme.mincho(12)).foregroundStyle(Theme.inkFaint)
+            Button { showGuide = true } label: { Image(systemName: "questionmark.circle") }
+                .buttonStyle(.plain).foregroundStyle(Theme.inkFaint)
         }
+        .padding(.horizontal, 24)
+        .padding(.vertical, 14)
+    }
+
+    private func tabButton(_ title: String, _ target: Tab) -> some View {
+        Button(title) { tab = target }
+            .buttonStyle(.plain)
+            .font(Theme.mincho(14, bold: tab == target))
+            .foregroundStyle(tab == target ? Theme.shu : Theme.inkFaint)
     }
 }
 
-/// First-run guide: shows that "bending" an unrelated verse to your own dilemma is the whole point.
+/// First-run guide: the 辻占 tradition, then why "bending" an unrelated verse is the whole point.
 struct GuideView: View {
     let lang: AppLanguage
     let onClose: () -> Void
 
     var body: some View {
         let l = L10n(lang: lang)
-        VStack(alignment: .leading, spacing: 16) {
-            Text(l.guideTitle).font(.title2.weight(.semibold))
-            Text(l.guideBody).lineSpacing(5)
-            Text(l.guideExamples).font(.headline).padding(.top, 4)
-            ScrollView {
-                VStack(spacing: 10) {
-                    ForEach(FixedExamples.all(lang), id: \.ref) { item in
-                        ExampleCard(example: item.example, lang: lang, verse: "\(item.verse)（\(item.ref)）")
-                    }
-                }
-            }
-            HStack { Spacer(); Button(l.guideStart, action: onClose).buttonStyle(.borderedProminent).controlSize(.large) }
+        VStack(alignment: .leading, spacing: 18) {
+            ScrollView { GuideContent(lang: lang).padding(.trailing, 8) }
+            HStack { Spacer(); Button(l.guideStart, action: onClose).buttonStyle(InkButtonStyle(filled: true)) }
         }
-        .padding(28)
-        .frame(width: 560, height: 640)
+        .padding(32)
+        .frame(width: 580, height: 680)
+        .background(Theme.paper)
+        .foregroundStyle(Theme.ink)
+        .preferredColorScheme(.light)
+    }
+}
+
+/// The guide's scrollable body, split out so it can also be rendered to an image for review.
+struct GuideContent: View {
+    let lang: AppLanguage
+
+    var body: some View {
+        let l = L10n(lang: lang)
+        VStack(alignment: .leading, spacing: 18) {
+            Text(l.guideTitle).font(Theme.mincho(22, bold: true))
+            VStack(alignment: .leading, spacing: 10) {
+                Text("言霊の　八十の衢に　夕占問ふ\n占正に告る　妹相寄らむ")
+                    .font(Theme.mincho(17))
+                    .lineSpacing(8)
+                .fixedSize(horizontal: false, vertical: true)
+                Text(l.poemSource).font(Theme.mincho(11)).foregroundStyle(Theme.inkFaint)
+                Text(l.poemMeaning).font(Theme.mincho(13)).lineSpacing(5).foregroundStyle(Theme.inkFaint)
+                .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding(.leading, 14)
+            .overlay(alignment: .leading) { Rectangle().fill(Theme.shu).frame(width: 2) }
+            Text(l.guideHistory).font(Theme.mincho(14)).lineSpacing(6).fixedSize(horizontal: false, vertical: true)
+            Text(l.guideBody).font(Theme.mincho(14)).lineSpacing(6).fixedSize(horizontal: false, vertical: true)
+            Text(l.guideExamples).font(Theme.mincho(16, bold: true)).padding(.top, 4)
+            ForEach(FixedExamples.all(lang), id: \.ref) { item in
+                ExampleCard(example: item.example, lang: lang, verse: FixedExamples.caption(item, lang))
+            }
+        }
     }
 }

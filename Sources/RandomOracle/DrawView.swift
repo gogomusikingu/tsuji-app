@@ -35,32 +35,30 @@ struct DrawView: View {
 
     private func idle(_ l: L10n) -> some View {
         let remaining = cooldown.remaining(now: now)
-        return VStack(spacing: 32) {
+        return VStack(spacing: 36) {
             Spacer()
-            Image(systemName: "book.closed")
-                .font(.system(size: 72, weight: .ultraLight))
+            TsujiMark().frame(width: 120, height: 120)
             Text(l.intro)
+                .font(Theme.mincho(16))
                 .multilineTextAlignment(.center)
-                .lineSpacing(6)
+                .lineSpacing(10)
             if remaining > 0 {
                 Text(l.nextDraw(Cooldown.format(remaining)))
-                    .font(.callout.monospacedDigit())
-                    .foregroundStyle(.secondary)
+                    .font(Theme.mincho(13).monospacedDigit())
+                    .foregroundStyle(Theme.inkFaint)
             } else {
-                Button(l.openButton, action: begin)
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.large)
+                Button(l.openButton, action: begin).buttonStyle(InkButtonStyle(filled: true))
             }
             Spacer()
-            Text(l.disclaimer).font(.footnote).foregroundStyle(.secondary)
+            Text(l.disclaimer).font(Theme.mincho(11)).foregroundStyle(Theme.inkFaint)
         }
     }
 
     private func focusing(_ l: L10n) -> some View {
-        VStack(spacing: 24) {
+        VStack(spacing: 28) {
             Spacer()
-            ProgressView()
-            Text(l.focusing).foregroundStyle(.secondary)
+            TsujiMark().frame(width: 80, height: 80).opacity(0.5)
+            Text(l.focusing).font(Theme.mincho(15)).foregroundStyle(Theme.inkFaint)
             Spacer()
         }
     }
@@ -69,66 +67,33 @@ struct DrawView: View {
         ScrollView {
             VStack(spacing: 20) {
                 if let verse = entry?.verse {
-                    page(verse)
+                    VersePage(bible: bible, verse: verse, lang: lang, showContext: $showContext)
                         .rotation3DEffect(.degrees(pageAngle), axis: (x: 0, y: 1, z: 0), anchor: .leading, perspective: 0.4)
                         .opacity(pageAngle > 80 ? 0 : 1)
                     if pageAngle == 0 {
                         guide(l)
-                        Divider()
+                            Rectangle().fill(Theme.ink.opacity(0.12)).frame(height: 1)
                         others(l)
                     }
                 }
             }
-            .padding(.horizontal, 4)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 8)
         }
-    }
-
-    /// The drawn verse alone; surrounding verses appear faintly only when asked for.
-    private func page(_ verse: Verse) -> some View {
-        let shown = showContext ? bible.context(of: verse, radius: 2) : [verse]
-        return VStack(alignment: .leading, spacing: 10) {
-            ForEach(shown, id: \.self) { v in
-                let isDrawn = v == verse
-                HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    if showContext {
-                        Text("\(v.verse)")
-                            .font(.caption2.monospacedDigit())
-                            .foregroundStyle(.secondary)
-                    }
-                    Text(v.text(lang))
-                        .font(.system(isDrawn ? .title2 : .callout, design: .serif))
-                        .foregroundStyle(isDrawn ? .primary : .tertiary)
-                        .lineSpacing(isDrawn ? 8 : 3)
-                        .textSelection(.enabled)
-                }
-            }
-            HStack {
-                Button(showContext ? L10n(lang: lang).hideContext : L10n(lang: lang).showContext) {
-                    withAnimation { showContext.toggle() }
-                }
-                .buttonStyle(.link)
-                .font(.caption)
-                Spacer()
-                Text(verse.reference(lang))
-                    .font(.system(.callout, design: .serif))
-                    .foregroundStyle(.secondary)
-            }
-        }
-        .padding(28)
-        .frame(maxWidth: .infinity)
-        .background(RoundedRectangle(cornerRadius: 6).fill(Color(nsColor: .textBackgroundColor)).shadow(radius: 3))
+        .scrollContentBackground(.hidden)
     }
 
     /// Sample readings of other verses, shown only when the user asks for them.
     private func others(_ l: L10n) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             if showOthers {
-                Text(l.othersCaption).font(.caption).foregroundStyle(.secondary)
+                Text(l.othersCaption).font(Theme.mincho(11)).foregroundStyle(Theme.inkFaint)
                 ForEach(FixedExamples.all(lang), id: \.ref) { item in
-                    ExampleCard(example: item.example, lang: lang, verse: "\(item.verse)（\(item.ref)）")
+                    ExampleCard(example: item.example, lang: lang, verse: FixedExamples.caption(item, lang))
                 }
             } else {
                 Button(l.showOthers) { withAnimation { showOthers = true } }
+                    .buttonStyle(.plain).font(Theme.mincho(13)).foregroundStyle(Theme.shu)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -142,7 +107,7 @@ struct DrawView: View {
         return VStack(alignment: .leading, spacing: 14) {
             ForEach(0...step, id: \.self) { i in
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("\(i + 1). \(steps[i].0)").font(.callout.weight(.medium))
+                    Text("\(["一", "二", "三"][i])　\(steps[i].0)").font(Theme.mincho(15))
                     TextField(l.optional, text: binding(steps[i].1), axis: .vertical)
                         .textFieldStyle(.roundedBorder)
                 }
@@ -151,13 +116,12 @@ struct DrawView: View {
             HStack {
                 Spacer()
                 if step < steps.count - 1 {
-                    Button(l.next) { withAnimation { step += 1 } }
+                    Button(l.next) { withAnimation { step += 1 } }.buttonStyle(InkButtonStyle())
                 } else {
-                    Text(l.disclaimer).font(.footnote).foregroundStyle(.secondary)
+                    Text(l.disclaimer).font(Theme.mincho(11)).foregroundStyle(Theme.inkFaint)
                 }
-                Button(l.done, action: finish)
+                Button(l.done, action: finish).buttonStyle(InkButtonStyle(filled: true))
             }
-            .controlSize(.large)
         }
     }
 
@@ -200,23 +164,72 @@ struct ExampleCard: View {
 
     var body: some View {
         let l = L10n(lang: lang)
-        VStack(alignment: .leading, spacing: 4) {
-            if let verse { Text(verse).font(.system(.callout, design: .serif)).padding(.bottom, 4) }
+        VStack(alignment: .leading, spacing: 6) {
+            if let verse { Text(verse).font(Theme.mincho(13)).lineSpacing(4).fixedSize(horizontal: false, vertical: true).padding(.bottom, 4) }
             row(l.exWorry, example.worry)
             row(l.exWords, example.words)
             row(l.exReading, example.reading)
             row(l.exAction, example.action)
         }
-        .font(.callout)
-        .padding(12)
+        .font(Theme.mincho(12))
+        .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(RoundedRectangle(cornerRadius: 6).fill(.quaternary.opacity(0.5)))
+        .background(Rectangle().fill(Theme.paperDeep.opacity(0.6)))
     }
 
     private func row(_ label: String, _ value: String) -> some View {
         HStack(alignment: .firstTextBaseline) {
-            Text(label).foregroundStyle(.secondary).frame(width: 90, alignment: .leading)
-            Text(value).textSelection(.enabled)
+            Text(label).foregroundStyle(Theme.shu).frame(width: 100, alignment: .leading)
+            Text(value).lineSpacing(3).fixedSize(horizontal: false, vertical: true).textSelection(.enabled)
         }
     }
+}
+
+/// The drawn verse alone; surrounding verses appear faintly only when asked for.
+/// A vermilion bookmark ribbon marks the page the book fell open at.
+struct VersePage: View {
+    let bible: Bible
+    let verse: Verse
+    let lang: AppLanguage
+    @Binding var showContext: Bool
+
+var body: some View {
+    let l = L10n(lang: lang)
+    let shown = showContext ? bible.context(of: verse, radius: 2) : [verse]
+    return VStack(alignment: .leading, spacing: 14) {
+        ForEach(shown, id: \.self) { v in
+            let isDrawn = v == verse
+            HStack(alignment: .firstTextBaseline, spacing: 10) {
+                if showContext {
+                    Text("\(v.verse)").font(Theme.mincho(10)).foregroundStyle(Theme.inkFaint)
+                }
+                Text(v.text(lang))
+                    .font(Theme.mincho(isDrawn ? 21 : 13))
+                    .foregroundStyle(isDrawn ? Theme.ink : Theme.inkFaint)
+                    .lineSpacing(isDrawn ? 12 : 4)
+                    .textSelection(.enabled)
+            }
+        }
+        HStack {
+            Button(showContext ? l.hideContext : l.showContext) { withAnimation { showContext.toggle() } }
+                .buttonStyle(.plain)
+                .font(Theme.mincho(11))
+                .foregroundStyle(Theme.shu)
+            Spacer()
+            Text(verse.reference(lang)).font(Theme.mincho(12)).foregroundStyle(Theme.inkFaint)
+        }
+        .padding(.top, 6)
+    }
+    .padding(.horizontal, 40)
+    .padding(.top, 48)
+    .padding(.bottom, 28)
+    .frame(maxWidth: .infinity)
+    .background(
+        Rectangle().fill(Color.white.opacity(0.55))
+            .shadow(color: Theme.ink.opacity(0.12), radius: 6, y: 2)
+    )
+    .overlay(alignment: .topTrailing) {
+        Rectangle().fill(Theme.shu).frame(width: 6, height: 54).padding(.trailing, 36).offset(y: -8)
+    }
+}
 }
