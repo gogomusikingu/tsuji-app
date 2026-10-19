@@ -36,8 +36,8 @@ struct L10n {
     var menuNoText: String { t("文字を読み取れませんでした。明るく、正面から撮った写真で試してください。",
                                "No text found. Try a brighter photo taken straight on.") }
     var tabRecords: String { t("記録", "Journal") }
-    var intro: String { t("迷いをひとつ、心に思い浮かべてください。\n書は無作為にひらかれます。引き直しはできません。",
-                          "Hold one dilemma in your mind.\nThe book opens at random. There is no second draw.") }
+    var intro: String { t("迷いをひとつ、心に思い浮かべてください。\n書は無作為にひらかれます。\n引き直しはできません。",
+                          "Hold one dilemma in your mind.\nThe book opens at random.\nThere is no second draw.") }
     var openButton: String { t("書をひらく", "Open the book") }
     var focusing: String { t("目を閉じて、迷いを思い浮かべて…", "Close your eyes and hold your dilemma…") }
     var step1: String { t("いちばん目に止まった言葉はどれですか？", "Which words caught your eye first?") }
