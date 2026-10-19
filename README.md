@@ -1,14 +1,17 @@
 # 迷ったら、偶然の一節に聞く｜辻
 
-迷ったとき、無作為に開いた聖書の一節を手がかりに「迷いからの出口」を得る iPhone アプリ。
-タレブ『反脆弱性』で紹介された書物占いを現代に落とし込む試み。占いではなく「考えるための道具」。
+迷ったとき、無作為に開いた聖書の一節を手がかりに「迷いからの出口」を得るアプリ。
+ナシーム・ニコラス・タレブ『反脆弱性』で紹介された書物占いを現代に落とし込む試み。占いではなく「考えるための道具」。
 
 詳細な設計・TODO は [specification.md](specification.md) を参照。
 
 ## 必要な環境
-- Mac（試作版は Command Line Tools だけで動く。iPhone 版は Xcode が必要）
-- iPhone（動作確認用）
-- Apple Developer Program（App Store 公開時）
+### 使う人
+- Web 版（準備中）: ブラウザだけ（iPhone の Safari など）。インストール不要
+
+### 開発する人
+- Mac（Mac 試作版は Command Line Tools だけで動く。iPhone 版は Xcode が必要）
+- iPhone 実機での確認や App Store 公開をする場合は、Apple ID / Apple Developer Program
 
 ## Mac 試作版の起動
 Finder で `試作版を起動.command` をダブルクリックする（試用モード: 待ち時間10秒）。
