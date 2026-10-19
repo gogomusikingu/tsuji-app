@@ -6,9 +6,24 @@
 詳細な設計・TODO は [specification.md](specification.md) を参照。
 
 ## 必要な環境
-- Mac（Xcode）
+- Mac（試作版は Command Line Tools だけで動く。iPhone 版は Xcode が必要）
 - iPhone（動作確認用）
 - Apple Developer Program（App Store 公開時）
 
-## 状態
-- 方針策定済み。実装はこれから
+## Mac 試作版の起動
+ターミナルで次を実行する（初回はビルドに1分ほどかかる）。
+
+```sh
+cd ~/project/Random
+./tools/run_mac.sh
+```
+
+試しに何度も引きたいときは、待ち時間を秒で指定できる（例: 10秒）。
+
+```sh
+RANDOM_ORACLE_COOLDOWN=10 ./tools/run_mac.sh
+```
+
+## 聖書データ
+eBible.org のパブリックドメイン訳を使用（日本語: フリーダム・バイブル、英語: World English Bible）。
+作り直す場合は `tools/build_bible.py` を参照。

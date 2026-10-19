@@ -39,10 +39,34 @@
 - 多言語: String Catalog で日本語・英語の画面文字を管理
 - サーバーなし（第1段階）。聖書本文はアプリに同梱
 
+### 4.1 Mac 試作版（MVP・2026-10-19）
+- Xcode なしで動く Mac アプリ（Swift Package / SwiftUI）。iPhone 版にコードを流用する前提
+- 実装済み: 3.1 書を開く（3秒の集中→ページをめくる動き→振動）、引き直し防止（1時間）、
+  3.2 振り返り（直後の解釈・行動、記録タブで「その後どうなった？」を後から記入）、日本語/英語切替
+- 未実装: 3.2 の数日後の通知、3.3 シェア、3.4 メニュー
+- 引いた時点で記録に自動保存する（途中で閉じて引き直すことを防ぐため）
+- 記録は端末内の JSON（`~/Library/Application Support/RandomOracle/journal.json`）。
+  iPhone 版で SwiftData に置き換える
+- 画面文字は `Language.swift` の表で管理。iPhone 版で String Catalog に移す
+- ビルドの注意: Command Line Tools の macOS 27 SDK は SwiftUI のマクロが使えないため、
+  macOS 26 SDK を指定してビルドする（`tools/run_mac.sh`）。テストは Swift Testing（XCTest は Xcode が必要）
+
+### 4.2 ディレクトリ構成
+```
+Package.swift
+Sources/RandomOracle/        アプリ本体（App / ContentView / DrawView / RecordsView / Bible / Journal / Cooldown / Language）
+Sources/RandomOracle/Resources/bible.tsv   聖書本文（書・章・節・日本語・英語）31,098節
+Tests/RandomOracleTests/     テスト
+tools/build_bible.py         eBible.org のデータから bible.tsv を作る
+tools/run_mac.sh             Mac 試作版のビルドと起動
+```
+
 ## 5. 本文データと著作権
-- 日本語 第一候補: 口語訳聖書（1955年）。公開前に日本聖書協会へ利用条件の確認が必要
-- 日本語 予備: 文語訳聖書（著作権切れ。ただし読みにくい）
-- 英語: World English Bible（パブリックドメイン）
+- 採用中（試作版）: 日本語「フリーダム・バイブル」（jpnm）＋英語「World English Bible」（engwebp）。
+  どちらも eBible.org 配布のパブリックドメインで、全31,103節の番号が完全に一致する
+  （どちらかが空の5節は除外）。フリーダム・バイブルは「翻訳の草案」とされており、訳の質は要確認
+- 日本語 他の候補: 口語訳聖書（1955年。日本聖書協会へ確認が必要）、新改訳新約聖書1965年版（パブリックドメイン。新約のみ）、
+  文語訳聖書（著作権切れ。読みにくい）
 - アエネーイス: 後から追加。英語の著作権切れの訳から独自に和訳
 
 ## 6. 運用方針
@@ -58,8 +82,11 @@
 ## 8. TODO
 - [ ] Xcode をインストールする（ユーザー作業: Mac の App Store から「Xcode」を入手）
 - [ ] Apple Developer Program に登録する（公開前。年 99 ドル）
-- [ ] 口語訳聖書の利用条件を確認する
-- [ ] 試作: 3.1 書物を引く → 3.2 振り返り → 3.3 シェア → 3.4 メニュー
+- [ ] 日本語訳を決める（フリーダム・バイブルの訳の質を読んで確認／口語訳の利用条件を確認）
+- [x] Mac 試作版: 3.1 書を開く、3.2 振り返り（直後・後から記入）、日本語/英語切替
+- [ ] Mac 試作版を実際に使い、画面と演出を確認する（ユーザー作業）
+- [ ] 試作の続き: 3.3 シェア → 3.4 メニュー → iPhone 版へ移植（数日後の通知を含む）
 
 ## 9. 変更履歴
 - 2026-10-19 方針相談をもとに初版を作成（日本語・英語の2言語対応を含む）
+- 2026-10-19 聖書データ（jpnm / engwebp）を取り込み、Mac 試作版（書を開く・振り返り・言語切替）を作成
