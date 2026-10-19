@@ -23,7 +23,7 @@ struct L10n {
     var focusing: String { t("目を閉じて、迷いを思い浮かべて…", "Close your eyes and hold your dilemma…") }
     var focusingOpen: String { t("書が、ひらかれます", "The book opens") }
     var step1: String { t("いちばん目に止まった言葉はどれですか？", "Which words caught your eye first?") }
-    var step2: String { t("その言葉を、あなたの迷いに置き換えるとしたら？", "If those words were about your dilemma, what would they mean?") }
+    var step2: String { t("その言葉を、迷いに置き換えるとしたら？", "If those words were about your dilemma, what would they mean?") }
     var step3: String { t("では、どうしますか？", "So, what will you do?") }
     var next: String { t("次へ", "Next") }
     var stepOutcome: String { t("その後、どうなりましたか？", "What happened afterwards?") }

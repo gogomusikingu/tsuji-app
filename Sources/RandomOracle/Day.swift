@@ -72,8 +72,11 @@ struct CenterStage<Below: View>: View {
                 TsujiMark(tight: true, verse: verse)
                     .frame(width: Self.markSize, height: Self.markSize)
                     .position(centre)
+                // Centred on the same vertical line as the mark (the screen's centre), not on this
+                // view's own centre, which differs where safe areas are uneven (e.g. a side status bar).
                 below()
                     .frame(maxWidth: .infinity)
+                    .offset(x: centre.x - geo.size.width / 2)
                     .padding(.top, centre.y + Self.markSize / 2 + 32)
             }
             .frame(width: geo.size.width, height: geo.size.height, alignment: .top)
