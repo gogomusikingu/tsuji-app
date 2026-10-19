@@ -13,6 +13,8 @@ struct DrawView: View {
     @State private var entry: JournalEntry?
     @State private var pageAngle: Double = 90
     @State private var step = 0
+    @State private var showContext = false
+    @State private var showOthers = false
     @State private var now = Date()
     private let cooldown = Cooldown()
     private let ticker = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
@@ -70,39 +72,66 @@ struct DrawView: View {
                     page(verse)
                         .rotation3DEffect(.degrees(pageAngle), axis: (x: 0, y: 1, z: 0), anchor: .leading, perspective: 0.4)
                         .opacity(pageAngle > 80 ? 0 : 1)
-                    if pageAngle == 0 { guide(l) }
+                    if pageAngle == 0 {
+                        guide(l)
+                        Divider()
+                        others(l)
+                    }
                 }
             }
             .padding(.horizontal, 4)
         }
     }
 
-    /// The drawn verse, with the surrounding verses shown faintly for context.
+    /// The drawn verse alone; surrounding verses appear faintly only when asked for.
     private func page(_ verse: Verse) -> some View {
-        let context = bible.context(of: verse, radius: 2)
+        let shown = showContext ? bible.context(of: verse, radius: 2) : [verse]
         return VStack(alignment: .leading, spacing: 10) {
-            ForEach(context, id: \.self) { v in
+            ForEach(shown, id: \.self) { v in
                 let isDrawn = v == verse
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    Text("\(v.verse)")
-                        .font(.caption2.monospacedDigit())
-                        .foregroundStyle(.secondary)
+                    if showContext {
+                        Text("\(v.verse)")
+                            .font(.caption2.monospacedDigit())
+                            .foregroundStyle(.secondary)
+                    }
                     Text(v.text(lang))
-                        .font(.system(isDrawn ? .title3 : .callout, design: .serif))
-                        .fontWeight(isDrawn ? .semibold : .regular)
+                        .font(.system(isDrawn ? .title2 : .callout, design: .serif))
                         .foregroundStyle(isDrawn ? .primary : .tertiary)
-                        .lineSpacing(isDrawn ? 6 : 3)
+                        .lineSpacing(isDrawn ? 8 : 3)
                         .textSelection(.enabled)
                 }
             }
-            Text(verse.reference(lang))
-                .font(.system(.callout, design: .serif))
-                .foregroundStyle(.secondary)
-                .frame(maxWidth: .infinity, alignment: .trailing)
+            HStack {
+                Button(showContext ? L10n(lang: lang).hideContext : L10n(lang: lang).showContext) {
+                    withAnimation { showContext.toggle() }
+                }
+                .buttonStyle(.link)
+                .font(.caption)
+                Spacer()
+                Text(verse.reference(lang))
+                    .font(.system(.callout, design: .serif))
+                    .foregroundStyle(.secondary)
+            }
         }
         .padding(28)
         .frame(maxWidth: .infinity)
         .background(RoundedRectangle(cornerRadius: 6).fill(Color(nsColor: .textBackgroundColor)).shadow(radius: 3))
+    }
+
+    /// Sample readings of other verses, shown only when the user asks for them.
+    private func others(_ l: L10n) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            if showOthers {
+                Text(l.othersCaption).font(.caption).foregroundStyle(.secondary)
+                ForEach(FixedExamples.all(lang), id: \.ref) { item in
+                    ExampleCard(example: item.example, lang: lang, verse: "\(item.verse)（\(item.ref)）")
+                }
+            } else {
+                Button(l.showOthers) { withAnimation { showOthers = true } }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     /// Questions shown one at a time. They help the user read meaning in, but never interpret for them.
@@ -148,6 +177,8 @@ struct DrawView: View {
         DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
             pageAngle = 90
             step = 0
+            showContext = false
+            showOthers = false
             phase = .revealed
             NSHapticFeedbackManager.defaultPerformer.perform(.levelChange, performanceTime: .now)
             withAnimation(.easeOut(duration: 1.2)) { pageAngle = 0 }
@@ -159,5 +190,33 @@ struct DrawView: View {
         entry = nil
         now = Date()
         phase = .idle
+    }
+}
+
+struct ExampleCard: View {
+    let example: ReadingExample
+    let lang: AppLanguage
+    var verse: String? = nil
+
+    var body: some View {
+        let l = L10n(lang: lang)
+        VStack(alignment: .leading, spacing: 4) {
+            if let verse { Text(verse).font(.system(.callout, design: .serif)).padding(.bottom, 4) }
+            row(l.exWorry, example.worry)
+            row(l.exWords, example.words)
+            row(l.exReading, example.reading)
+            row(l.exAction, example.action)
+        }
+        .font(.callout)
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(RoundedRectangle(cornerRadius: 6).fill(.quaternary.opacity(0.5)))
+    }
+
+    private func row(_ label: String, _ value: String) -> some View {
+        HStack(alignment: .firstTextBaseline) {
+            Text(label).foregroundStyle(.secondary).frame(width: 90, alignment: .leading)
+            Text(value).textSelection(.enabled)
+        }
     }
 }

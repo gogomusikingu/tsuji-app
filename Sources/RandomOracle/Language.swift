@@ -27,6 +27,20 @@ struct L10n {
     var action: String { t("どうするか（任意）", "What you will do (optional)") }
     var outcome: String { t("その後どうなった？（任意）", "What happened afterwards? (optional)") }
     var done: String { t("書を閉じる", "Close the book") }
+    var showContext: String { t("前後を読む", "Read around it") }
+    var hideContext: String { t("この一節だけにする", "Show this verse only") }
+    var showOthers: String { t("他の人の読み方を見る", "See how others read it") }
+    var othersCaption: String { t("別の節を引いた人たちの、架空の読み方の例です。正しい答えではありません。",
+                                  "Fictional readings of other verses. They are not the right answer.") }
+    var exWorry: String { t("悩み", "Dilemma") }
+    var exWords: String { t("目に止まった言葉", "Words") }
+    var exReading: String { t("読み方", "Reading") }
+    var exAction: String { t("行動", "Action") }
+    var guideTitle: String { t("書の開き方", "How to open the book") }
+    var guideBody: String { t("出てくる一節は、あなたの悩みと無関係に見えるのが普通です。\n正しい意味を探す必要はありません。目に止まった言葉を、自分の悩みに勝手にこじつけてください。同じ一節から、人によって正反対の結論が出てもかまいません。",
+                              "The verse will usually look unrelated to your dilemma.\nDon’t look for the correct meaning. Take the words that catch your eye and bend them to your situation. The same verse may lead different people to opposite conclusions.") }
+    var guideExamples: String { t("読み方の例", "Examples") }
+    var guideStart: String { t("はじめる", "Start") }
     var noRecords: String { t("まだ記録はありません", "No entries yet") }
     var disclaimer: String { t("最終的な判断は、あなた自身が行ってください。", "The final decision is always yours.") }
     func nextDraw(_ remaining: String) -> String { t("次に書を開けるまで \(remaining)", "Next opening in \(remaining)") }

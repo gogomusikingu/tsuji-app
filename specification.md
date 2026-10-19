@@ -16,7 +16,12 @@
 ### 3.1 書物を引く（主機能）
 - 悩みは入力しない。心に思い浮かべてから引く
 - 聖書から1節を完全に無作為に表示。解釈は添えない
-- 前後2節（同じ章の中）を薄く表示し、文脈をつかめるようにする
+- 表示は一節だけ。「前後を読む」を押したときだけ、同じ章の前後2節を薄く表示する
+- 初回起動時に「書の開き方」を表示: 一節は悩みと無関係に見えて当然で、目に止まった言葉を自由にこじつけてよいこと、
+  そして固定の読み方の例（6件）を見せる。画面右上の「?」でいつでも再表示できる
+- 「他の人の読み方を見る」を押したときだけ、同じ固定の例を表示する（シェア機能ができるまでの代わり）。
+  例は別の節のものにして、ユーザーが引いた節の答えを誘導しない
+  - 端末内 AI（Apple Intelligence）でその場で例を作る案も試したが、固定の例で足りるため採用しない
 - 読み解きの手がかりとして、問いを1つずつ出す（答えは任意）:
   1. いちばん目に止まった言葉はどれですか？ 2. その言葉を、あなたの迷いに置き換えるとしたら？ 3. では、どうしますか？
 - 引き直しはなし。一度引いたら一定時間は引けない（時間は未定。仮に1時間）
@@ -52,12 +57,13 @@
   iPhone 版で SwiftData に置き換える
 - 画面文字は `Language.swift` の表で管理。iPhone 版で String Catalog に移す
 - ビルドの注意: Command Line Tools の macOS 27 SDK は SwiftUI のマクロが使えないため、
-  macOS 26 SDK を指定してビルドする（`tools/run_mac.sh`）。テストは Swift Testing（XCTest は Xcode が必要）
+  macOS 26 SDK を指定してビルドする（`tools/run_mac.sh`）。テストは Swift Testing（XCTest は Xcode が必要）。
+  テストファイルを変更した直後の1回目は「TestingMacros が見つからない」と失敗することがあり、もう一度実行すると通る
 
 ### 4.2 ディレクトリ構成
 ```
 Package.swift
-Sources/RandomOracle/        アプリ本体（App / ContentView / DrawView / RecordsView / Bible / Journal / Cooldown / Language）
+Sources/RandomOracle/        アプリ本体（App / ContentView / DrawView / RecordsView / Bible / Journal / Cooldown / Language / Examples）
 Sources/RandomOracle/Resources/bible.tsv   聖書本文（書・章・節・日本語・英語）31,098節
 Tests/RandomOracleTests/     テスト
 tools/build_bible.py         eBible.org のデータから bible.tsv を作る
@@ -95,3 +101,4 @@ tools/run_mac.sh             Mac 試作版のビルドと起動
 - 2026-10-19 方針相談をもとに初版を作成（日本語・英語の2言語対応を含む）
 - 2026-10-19 聖書データ（jpnm / engwebp）を取り込み、Mac 試作版（書を開く・振り返り・言語切替）を作成
 - 2026-10-19 聖書に不慣れでも読み解けるよう、前後の節の表示と段階的な3つの問いを追加
+- 2026-10-19 表示を一節だけに戻し（前後はボタンで表示）、初回ガイドと「他の人の読み方を見る」（固定の例6件）を追加

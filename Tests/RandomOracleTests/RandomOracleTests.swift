@@ -51,3 +51,12 @@ import Testing
     #expect(entries.first?.keyword == "")
     #expect(entries.first?.interpretation == "x")
 }
+
+@Test func fixedExampleVersesMatchBundledText() {
+    let bible = Bible.bundled()
+    for lang in AppLanguage.allCases {
+        for item in FixedExamples.all(lang) {
+            #expect(bible.verses.contains { $0.text(lang) == item.verse }, "\(item.ref)")
+        }
+    }
+}
