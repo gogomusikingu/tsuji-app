@@ -140,18 +140,23 @@ struct NoteRow: View {
     let note: Note
     let lang: AppLanguage
 
+    /// Strikes and restores it takes for a line to wear away completely.
+    static let wearLimit = 50.0
+
     var body: some View {
-        let wear = CGFloat(note.wear)
+        // 0 when freshly written, 1 when worn through. Early changes show a little; the last ones blur it away.
+        let f = min(Double(note.wear) / Self.wearLimit, 1)
         HStack(alignment: .firstTextBaseline, spacing: 10) {
             Text(note.text)
                 .font(Theme.mincho(13))
                 .strikethrough(note.isStruck, color: Theme.ink.opacity(0.7))
-                .foregroundStyle(Theme.ink.opacity(max(1 - 0.09 * wear, 0.5)))
-                .blur(radius: min(0.1 * wear, 0.5))
+                .foregroundStyle(Theme.ink.opacity(1 - 0.9 * pow(f, 0.8)))
+                .blur(radius: 4 * pow(f, 1.4))
                 .lineSpacing(3)
                 .fixedSize(horizontal: false, vertical: true)
+                // The worn patch sits under the words only, not the whole row.
+                .background { if note.wear > 0 { Smudge(seed: note.id, amount: f) } }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background { if note.wear > 0 { Smudge(seed: note.id, wear: note.wear) } }
             VStack(alignment: .trailing, spacing: 2) {
                 Text(NoteTime.short(note.date))
                 if note.isStruck, let last = note.strikes.last {
@@ -166,10 +171,10 @@ struct NoteRow: View {
 }
 
 /// A soft, irregular worn patch. Its shape is fixed per line (seeded by the note's id)
-/// and it grows darker with every strike or restore.
+/// and it grows darker with every strike or restore (amount 0...1).
 struct Smudge: View {
     let seed: UUID
-    let wear: Int
+    let amount: Double
 
     var body: some View {
         Canvas { ctx, size in
@@ -181,9 +186,9 @@ struct Smudge: View {
                          with: .color(Color(red: 0.86, green: 0.82, blue: 0.75)))
             }
         }
-        .blur(radius: 7)
-        .opacity(min(0.22 * Double(wear), 0.95))
-        .padding(.horizontal, -8)
+        .blur(radius: 6)
+        .opacity(0.15 + 0.8 * pow(amount, 0.6))
+        .padding(.horizontal, -4)
         .allowsHitTesting(false)
     }
 }

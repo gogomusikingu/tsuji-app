@@ -56,12 +56,12 @@ enum PreviewRenderer {
                 .frame(width: 390), "strike-\(lang.rawValue)", dir)
             // Wear stages 0...6 for the same line.
             render(VStack(alignment: .leading, spacing: 14) {
-                ForEach(0..<7) { n in
+                ForEach([0, 1, 3, 6, 10, 20, 30, 40, 50], id: \.self) { n in
                     NoteRow(note: Note(text: ja ? "隠れずに、自分の考えを言え" : "Speak plainly, don't hide",
                                        strikes: Array(repeating: Date(), count: n)), lang: lang)
                 }
             }.padding(24).frame(width: 390).background(Theme.paper).foregroundStyle(Theme.ink), "wear-\(lang.rawValue)", dir)
-            render(SplashView(lang: lang).frame(width: 390, height: 844), "splash-\(lang.rawValue)", dir)
+            render(SplashView(lang: lang, animated: false).frame(width: 390, height: 844), "splash-\(lang.rawValue)", dir)
             render(GuideContent(lang: lang).padding(32).frame(width: 580).background(Theme.paper).foregroundStyle(Theme.ink), "guide-\(lang.rawValue)", dir)
         }
         return true

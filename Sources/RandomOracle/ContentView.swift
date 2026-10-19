@@ -7,6 +7,7 @@ struct ContentView: View {
     @State private var showGuide = false
     @State private var tab: Tab = .draw
     @State private var showSplash = true
+    @State private var skipSplash = false
     /// Loaded off the main thread while the splash is up, so launch does not stall on 31k verses.
     @State private var bible: Bible?
 
@@ -34,13 +35,17 @@ struct ContentView: View {
         .overlay {
             if showSplash {
                 SplashView(lang: language).transition(.opacity)
+                    .contentShape(Rectangle())
+                    .onTapGesture { skipSplash = true }
             }
         }
         .task {
             // Show the name and mark for a moment while the text loads, then reveal the app
             // (and the guide on first run).
             async let loaded = Task.detached(priority: .userInitiated) { Bible.shared }.value
-            try? await Task.sleep(for: .seconds(1.2))
+            // About 4.5 s: longer than the usual 2-3 s guidance on purpose, as a pause before the
+            // day's verse. A tap skips it.
+            for _ in 0..<45 where !skipSplash { try? await Task.sleep(for: .milliseconds(100)) }
             bible = await loaded
             withAnimation(.easeOut(duration: 0.6)) { showSplash = false }
             if !guideSeen {
@@ -150,17 +155,29 @@ struct GuideContent: View {
 }
 
 /// Launch screen: the mark, the name and the tagline on plain paper, like a book's title page.
+/// The mark, then the tagline, then the name fade in one after another, so the pause reads as
+/// a breath before opening the book rather than a wait.
 struct SplashView: View {
     let lang: AppLanguage
+    var animated = true
+    @State private var stage = 0
 
     var body: some View {
         let l = L10n(lang: lang)
+        let shown = animated ? stage : 3
         VStack(spacing: 28) {
             Spacer()
-            TsujiMark().frame(width: 132, height: 132)
-            Text(l.tagline).font(Theme.mincho(lang == .ja ? 24 : 22, bold: true))
-            Text(l.appName).font(Theme.mincho(18)).foregroundStyle(Theme.inkFaint)
+            TsujiMark().frame(width: 132, height: 132).opacity(shown >= 1 ? 1 : 0)
+            Text(l.tagline).font(Theme.mincho(lang == .ja ? 24 : 22, bold: true)).opacity(shown >= 2 ? 1 : 0)
+            Text(l.appName).font(Theme.mincho(18)).foregroundStyle(Theme.inkFaint).opacity(shown >= 3 ? 1 : 0)
             Spacer()
+        }
+        .task {
+            guard animated else { return }
+            for next in 1...3 {
+                withAnimation(.easeOut(duration: 0.9)) { stage = next }
+                try? await Task.sleep(for: .seconds(0.9))
+            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Theme.paper)
