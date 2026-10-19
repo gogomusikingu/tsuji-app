@@ -59,6 +59,7 @@ Sources/RandomOracle/Resources/bible.tsv   聖書本文（書・章・節・日�
 Tests/RandomOracleTests/     テスト
 tools/build_bible.py         eBible.org のデータから bible.tsv を作る
 tools/run_mac.sh             Mac 試作版のビルドと起動
+試作版を起動.command          ダブルクリック用の起動ショートカット（待ち時間10秒）
 ```
 
 ## 5. 本文データと著作権

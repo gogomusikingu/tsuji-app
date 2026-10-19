@@ -11,7 +11,8 @@
 - Apple Developer Program（App Store 公開時）
 
 ## Mac 試作版の起動
-ターミナルで次を実行する（初回はビルドに1分ほどかかる）。
+Finder で `試作版を起動.command` をダブルクリックする（試用モード: 待ち時間10秒）。
+またはターミナルで次を実行する（初回はビルドに1分ほどかかる）。
 
 ```sh
 cd ~/project/Random
