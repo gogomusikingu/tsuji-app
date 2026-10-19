@@ -15,6 +15,7 @@ struct DrawView: View {
     @State private var showContext = false
     @State private var showOthers = false
     @State private var now = Date()
+    @State private var sharing: JournalEntry?
     private let cooldown = Cooldown()
     private let ticker = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
@@ -30,6 +31,7 @@ struct DrawView: View {
         .padding(Theme.screenPadding)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .onReceive(ticker) { now = $0 }
+        .sheet(item: $sharing) { ShareSheet(entry: $0, lang: lang) }
         #if DEBUG
         // Screenshot automation: TSUJI_AUTODRAW=1 opens the book right after launch.
         .onAppear {
@@ -121,13 +123,17 @@ struct DrawView: View {
                 .transition(.opacity)
             }
             HStack {
+                Button { sharing = entry } label: { Label(l.share, systemImage: "square.and.arrow.up") }
+                    .buttonStyle(.plain).font(Theme.mincho(13)).foregroundStyle(Theme.shu)
                 Spacer()
                 if step < steps.count - 1 {
                     Button(l.next) { withAnimation { step += 1 } }.buttonStyle(InkButtonStyle())
-                } else {
-                    Text(l.disclaimer).font(Theme.mincho(11)).foregroundStyle(Theme.inkFaint)
                 }
                 Button(l.done, action: finish).buttonStyle(InkButtonStyle(filled: true))
+            }
+            if step == steps.count - 1 {
+                Text(l.disclaimer).font(Theme.mincho(11)).foregroundStyle(Theme.inkFaint)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
             }
         }
     }

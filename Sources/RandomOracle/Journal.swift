@@ -11,6 +11,8 @@ struct JournalEntry: Codable, Identifiable, Hashable {
 
     init(verse: Verse) { self.verse = verse }
 
+    var hasReading: Bool { !interpretation.isEmpty || !action.isEmpty }
+
     // Tolerates journals saved by older versions that lack newer fields.
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -39,6 +41,13 @@ final class Journal: ObservableObject {
            let saved = try? JSONDecoder().decode([JournalEntry].self, from: data) {
             entries = saved
         }
+    }
+
+    /// How often the book was opened, how often it led to a decision, and how often the user looked back.
+    var stats: (opened: Int, decided: Int, reflected: Int) {
+        (entries.count,
+         entries.filter { !$0.action.isEmpty }.count,
+         entries.filter { !$0.outcome.isEmpty }.count)
     }
 
     func upsert(_ entry: JournalEntry) {

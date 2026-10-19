@@ -29,6 +29,11 @@ enum PreviewRenderer {
                 .padding(40).frame(width: 640).background(Theme.paper), "page-context-\(lang.rawValue)", dir)
             render(DrawView(bible: bible, journal: Journal(directory: dir), lang: lang)
                 .frame(width: 640, height: 560).background(Theme.paper).foregroundStyle(Theme.ink), "idle-\(lang.rawValue)", dir)
+            var shared = JournalEntry(verse: verse)
+            shared.interpretation = lang == .ja ? "隠れずに、自分の考えをはっきり言えということ。" : "Speak plainly instead of hiding."
+            shared.action = lang == .ja ? "明日の会議で反対意見を言う。" : "Raise my objection at tomorrow's meeting."
+            render(ShareCard(entry: shared, lang: lang), "share-\(lang.rawValue)", dir)
+            render(StatsBar(stats: (12, 7, 3), lang: lang).padding(24).frame(width: 390).background(Theme.paper).foregroundStyle(Theme.ink), "stats-\(lang.rawValue)", dir)
             render(SplashView(lang: lang).frame(width: 390, height: 844), "splash-\(lang.rawValue)", dir)
             render(GuideContent(lang: lang).padding(32).frame(width: 580).background(Theme.paper).foregroundStyle(Theme.ink), "guide-\(lang.rawValue)", dir)
         }

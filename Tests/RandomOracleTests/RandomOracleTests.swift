@@ -92,3 +92,18 @@ import Testing
     #expect(c.contains("コーヒー"), "\(lines)")
     #expect(c.count == 4, "\(c)")
 }
+
+@MainActor
+@Test func journalStatsCountDecisionsAndReflections() throws {
+    let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+    let journal = Journal(directory: dir)
+    let verse = Bible.bundled().verses[0]
+    for i in 0..<4 {
+        var e = JournalEntry(verse: verse)
+        if i < 2 { e.action = "do it" }
+        if i == 0 { e.outcome = "went well" }
+        journal.upsert(e)
+    }
+    #expect(journal.stats == (4, 2, 1))
+    #expect(!JournalEntry(verse: verse).hasReading)
+}

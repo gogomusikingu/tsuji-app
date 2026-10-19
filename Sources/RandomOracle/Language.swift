@@ -69,6 +69,14 @@ struct L10n {
                               "The verse will usually look unrelated to your dilemma.\nDon’t look for the correct meaning. Take the words that catch your eye and bend them to your situation. The same verse may lead different people to opposite conclusions.") }
     var guideExamples: String { t("読み方の例", "Examples") }
     var guideStart: String { t("はじめる", "Start") }
+    var share: String { t("シェア", "Share") }
+    var shareTitle: String { t("この一節をシェア", "Share this verse") }
+    var shareIncludeReading: String { t("自分の読み方も載せる", "Include my reading") }
+    var cancel: String { t("やめる", "Cancel") }
+    var statsOpened: String { t("ひらいた", "Opened") }
+    var statsDecided: String { t("行動を決めた", "Decided") }
+    var statsReflected: String { t("振り返った", "Looked back") }
+    var statsUnit: String { t("回", "") }
     var noRecords: String { t("まだ記録はありません", "No entries yet") }
     var disclaimer: String { t("最終的な判断は、あなた自身が行ってください。", "The final decision is always yours.") }
     func nextDraw(_ remaining: String) -> String { t("次に書をひらけるまで \(remaining)", "Next opening in \(remaining)") }
