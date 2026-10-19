@@ -7,6 +7,7 @@ enum Theme {
     static let ink = Color(red: 0.169, green: 0.161, blue: 0.153)        // 墨
     static let inkFaint = Color(red: 0.169, green: 0.161, blue: 0.153).opacity(0.55)
     static let shu = Color(red: 0.776, green: 0.278, blue: 0.188)        // 朱
+    static let road = Color(red: 0.78, green: 0.75, blue: 0.70)          // warm grey of a dirt road (mark only)
 
     #if os(iOS)
     static let screenPadding: CGFloat = 18
@@ -23,13 +24,13 @@ enum Theme {
 }
 
 /// The 辻 mark: an open book lying on a road; the road runs on past it and forks into two,
-/// each branch vanishing at its own point on the same (unseen) horizon. One white line on the page
-/// is the verse the book fell open at. Geometry is on a 1024 grid, scaled to 95% so the tips clear
+/// each branch vanishing at its own point on the same (unseen) horizon. One vermilion line on the page
+/// is the verse the book fell open at: the only accent, since the verse is what the app is about. Geometry is on a 1024 grid, scaled to 95% so the tips clear
 /// the iOS icon's rounded corners.
 struct TsujiMark: View {
     var ink: Color = Theme.ink
     var accent: Color = Theme.shu
-    var paper: Color = Theme.paper
+    var road: Color = Theme.road
 
     var body: some View {
         Canvas { ctx, size in
@@ -55,7 +56,7 @@ struct TsujiMark: View {
             let fl = onRay(vp, sl, 450), fr = onRay(vp, sr, 450)
             let crotch = CGPoint(x: 512, y: 450 - (fr.x - fl.x) * 0.35)
             // One outline, so no seam shows where the stem meets the branches.
-            ctx.fill(shape([sl, fl, CGPoint(x: 72, y: horizon), crotch, CGPoint(x: 952, y: horizon), fr, sr]), with: .color(accent))
+            ctx.fill(shape([sl, fl, CGPoint(x: 72, y: horizon), crotch, CGPoint(x: 952, y: horizon), fr, sr]), with: .color(road))
 
             // Book lying open on the road, its sides running to the same centre point.
             for s in [-1.0, 1.0] as [CGFloat] {
@@ -68,7 +69,7 @@ struct TsujiMark: View {
             var verse = Path()
             verse.move(to: CGPoint(x: inner + (outer - inner) * 0.14, y: 720))
             verse.addLine(to: CGPoint(x: inner + (outer - inner) * 0.82, y: 720))
-            ctx.stroke(verse, with: .color(paper), style: StrokeStyle(lineWidth: 16, lineCap: .round))
+            ctx.stroke(verse, with: .color(accent), style: StrokeStyle(lineWidth: 16, lineCap: .round))
         }
         .aspectRatio(1, contentMode: .fit)
     }
