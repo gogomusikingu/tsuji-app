@@ -6,6 +6,7 @@ struct ContentView: View {
     @StateObject private var journal = Journal()
     @State private var showGuide = false
     @State private var tab: Tab = .draw
+    @State private var showSplash = true
     private let bible = Bible.bundled()
 
     enum Tab { case draw, records }
@@ -24,7 +25,20 @@ struct ContentView: View {
         .foregroundStyle(Theme.ink)
         .tint(Theme.shu)
         .preferredColorScheme(.light)
-        .onAppear { if !guideSeen { showGuide = true } }
+        .overlay {
+            if showSplash {
+                SplashView(lang: language).transition(.opacity)
+            }
+        }
+        .onAppear {
+            // Show the name and mark briefly, then reveal the app (and the guide on first run).
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.6) {
+                withAnimation(.easeOut(duration: 0.6)) { showSplash = false }
+                if !guideSeen {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { showGuide = true }
+                }
+            }
+        }
         .sheet(isPresented: $showGuide) {
             GuideView(lang: language) { guideSeen = true; showGuide = false }
         }
@@ -103,5 +117,24 @@ struct GuideContent: View {
                 ExampleCard(example: item.example, lang: lang, verse: FixedExamples.caption(item, lang))
             }
         }
+    }
+}
+
+/// Launch screen: the mark, the name and the tagline on plain paper, like a book's title page.
+struct SplashView: View {
+    let lang: AppLanguage
+
+    var body: some View {
+        let l = L10n(lang: lang)
+        VStack(spacing: 28) {
+            Spacer()
+            TsujiMark().frame(width: 132, height: 132)
+            Text(l.appName).font(Theme.mincho(lang == .ja ? 44 : 34, bold: true))
+            Text(l.tagline).font(Theme.mincho(14)).foregroundStyle(Theme.inkFaint)
+            Spacer()
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Theme.paper)
+        .foregroundStyle(Theme.ink)
     }
 }

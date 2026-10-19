@@ -21,6 +21,7 @@ enum PreviewRenderer {
                 .padding(40).frame(width: 640).background(Theme.paper), "page-context-\(lang.rawValue)", dir)
             render(DrawView(bible: bible, journal: Journal(directory: dir), lang: lang)
                 .frame(width: 640, height: 560).background(Theme.paper).foregroundStyle(Theme.ink), "idle-\(lang.rawValue)", dir)
+            render(SplashView(lang: lang).frame(width: 390, height: 844), "splash-\(lang.rawValue)", dir)
             render(GuideContent(lang: lang).padding(32).frame(width: 580).background(Theme.paper).foregroundStyle(Theme.ink), "guide-\(lang.rawValue)", dir)
         }
         return true
