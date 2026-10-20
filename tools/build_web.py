@@ -1,7 +1,8 @@
 """Generate the web version's data files from the bundled Bible text.
 
 Writes (all git-ignored, rebuilt on deploy):
-  web/data/index.json        book codes and verse counts, in Bible order
+  web/data/index.json        book codes, verse counts and the positions of bare name lists
+                             (never drawn; see tools/find_name_lists.py), in Bible order
   web/data/<BOOK>.tsv        chapter, verse, Japanese, English (one book per file,
                              so a draw only downloads the book it lands in)
   web/fonts/verse.woff2      Shippori Mincho cut down to the characters used in the
@@ -38,9 +39,11 @@ def build_data() -> set[str]:
         chars.update(en)
     for book, rows in books.items():
         (out / f"{book}.tsv").write_text("\n".join(rows) + "\n", encoding="utf-8")
-    index = [[book, len(rows)] for book, rows in books.items()]
+    skipped = set((RES / "name_lists.tsv").read_text(encoding="utf-8").splitlines())
+    index = [[book, len(rows), [i for i, r in enumerate(rows) if "\t".join([book, *r.split("\t")[:2]]) in skipped]]
+             for book, rows in books.items()]
     (out / "index.json").write_text(json.dumps(index), encoding="utf-8")
-    print(f"data: {len(books)} books, {sum(n for _, n in index)} verses")
+    print(f"data: {len(books)} books, {sum(n for _, n, _ in index)} verses, {sum(len(x) for *_, x in index)} name lists skipped")
     return chars
 
 

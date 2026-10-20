@@ -9,6 +9,7 @@ let package = Package(
             name: "RandomOracle",
             resources: [
                 .copy("Resources/bible.tsv"),
+                .copy("Resources/name_lists.tsv"),
                 .copy("Resources/ShipporiMincho-Regular.ttf"),
                 .copy("Resources/ShipporiMincho-OFL.txt"),
             ],

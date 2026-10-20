@@ -129,13 +129,15 @@ export function randomIndex(n, crypto = globalThis.crypto) {
   }
 }
 
-/** Maps a position among all verses to [book, position within that book]. */
-export function locate(index, n) {
-  for (const [book, count] of index) {
-    if (n < count) return [book, n];
-    n -= count;
+/** Every verse the book may open at, as [book, position within that book]: all of them
+ *  except bare lists of names, which give nothing to read into a dilemma. */
+export function drawable(index) {
+  const out = [];
+  for (const [book, count, skipped = []] of index) {
+    const skip = new Set(skipped);
+    for (let i = 0; i < count; i++) if (!skip.has(i)) out.push([book, i]);
   }
-  throw new RangeError("verse position out of range");
+  return out;
 }
 
 export function parseBook(book, tsv) {

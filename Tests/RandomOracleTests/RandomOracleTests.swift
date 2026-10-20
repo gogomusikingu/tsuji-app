@@ -10,6 +10,17 @@ import Testing
     #expect(bible.verses.allSatisfy { !$0.ja.isEmpty && !$0.en.isEmpty })
 }
 
+@Test func nameListsAreNeverDrawn() {
+    let bible = Bible.shared
+    let skipped = bible.verses.count - bible.drawable.count
+    #expect(skipped > 400 && skipped < 600)
+    // Joshua 15:54 is a bare list of towns.
+    let i = bible.verses.firstIndex { $0.book == "JOS" && $0.chapter == 15 && $0.verse == 54 }!
+    #expect(!bible.drawable.contains(i))
+    // Still there for "read around it".
+    #expect(bible.context(of: bible.verses[i + 1], radius: 2).contains(bible.verses[i]))
+}
+
 @Test func referenceFormatting() {
     let v = Verse(book: "PRO", chapter: 16, verse: 9, ja: "", en: "")
     #expect(v.reference(.ja) == "箴言 16章9節")

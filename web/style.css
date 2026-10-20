@@ -135,7 +135,9 @@ html[lang="en"] #splash .t1 { font-size: 22px; }
 /* The worn patch sits under the words only, not the whole row. */
 .note .ink { display: inline-block; position: relative; max-width: 100%; font-size: 13px; line-height: 1.45; }
 .note .words { position: relative; white-space: pre-wrap; word-break: break-word;
-  transition: color 1s ease-in-out, filter 1s ease-in-out; }
+  transition: color 1s ease-in-out; }
+/* The blur is not animated: browsers redraw the words sharp for a moment when a blur starts to change.
+   Each strike adds so little that the step is not seen. */
 .note .strike { position: absolute; inset: 0; white-space: pre-wrap; word-break: break-word; color: transparent; text-decoration: line-through; text-decoration-color: rgba(43, 41, 39, 0.8);
   text-decoration-thickness: 1px; pointer-events: none; transition: opacity 1s ease-in-out; }
 .note .smudge { position: absolute; inset: 0 -4px; filter: blur(6px); pointer-events: none; transition: opacity 1s ease-in-out; }

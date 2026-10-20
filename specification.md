@@ -18,6 +18,10 @@
 ### 3.1 書をひらく（主機能）
 - 悩みは入力しない。心に思い浮かべてから引く
 - 聖書から1節を完全に無作為に表示。解釈は添えない
+  - 地名・人名を並べただけの節（例: ヨシュア記15章54節「フムタ、キルヤテ・アルバ、すなわちヘブロン、およびツィオル。」）は
+    読み解きようがないため、引く対象から外す（約470節。残りの約3万600節から無作為）。「前後を読む」では表示される。
+    見分け方は `tools/find_name_lists.py`（読点で区切った大半がカタカナの名前で、セリフを含まない節）。結果は
+    `Resources/name_lists.tsv` に保存し、Mac / iPhone / Web で共通に使う
 - 表示は一節だけ。「前後を読む」を押したときだけ、同じ章の前後2節を薄く表示する
 - 初回起動時に「書の開き方」を表示: 一節は悩みと無関係に見えて当然で、目に止まった言葉を自由にこじつけてよいこと、
   そして固定の読み方の例（上から3件。「他の人の読み方を見る」では6件すべて）を見せる。画面右上の「?」でいつでも再表示できる
@@ -157,9 +161,11 @@
 Package.swift
 Sources/RandomOracle/        アプリ本体（App / ContentView / DrawView / Notes / RecordsView / Share / Bible / Journal / Cooldown / Language / Examples / Theme / Previews）
 Sources/RandomOracle/Resources/bible.tsv   聖書本文（書・章・節・日本語・英語）31,098節
+Sources/RandomOracle/Resources/name_lists.tsv  引く対象から外す、名前を並べただけの節（tools/find_name_lists.py で作る）
 Sources/RandomOracle/Resources/ShipporiMincho-*  引用文用の字体（しっぽり明朝 Regular）とそのライセンス（SIL OFL 1.1）
 Tests/RandomOracleTests/     テスト
 tools/build_bible.py         eBible.org のデータから bible.tsv を作る
+tools/find_name_lists.py     名前を並べただけの節を探して name_lists.tsv を作る
 tools/build_web.py           Web 版の聖書データ・字体・アイコンを作る（tools/.venv の fonttools を使う）
 tools/run_web.sh             Web 版をこの Mac で開く（http://localhost:8765/）
 web/                         Web 版（index.html / style.css / app.js / core.js / mark.js / tests）
@@ -314,3 +320,4 @@ iPhone版を起動.command        Xcode で iPhone 版を開く
 - 2026-10-20 英語名を Sortes から Tsuji に変更（App Store の同名アプリとの重複を避けるため）
 - 2026-10-20 Web 版を作成（書をひらく・書き込み・シェア。記録はブラウザ内のみ。GitHub Pages への公開手順を用意）
 - 2026-10-20 初回説明の読み方の例を3件に減らした。Web 版の不具合修正: 線を1回引いただけで文字がかすんでいた件（ブラウザはごく弱いぼかしでも文字を粗く描くため、ぼかしが目に見える強さになるまでかけない）
+- 2026-10-20 地名・人名を並べただけの節（約470節）を引く対象から外した（全版）。Web 版: 線を引き直すとき一瞬ぼやけが戻って見えた件を修正（ぼかしの変化をなめらかに動かさない）

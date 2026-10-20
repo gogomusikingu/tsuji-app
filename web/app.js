@@ -1,6 +1,6 @@
 // 辻 web version: the same rituals as the iPhone app, in plain DOM. All records stay in this browser.
 import {
-  DAY, KINDS, strings, verseText, reference, randomIndex, locate, parseBook, context, formatRemaining,
+  DAY, KINDS, strings, verseText, reference, randomIndex, drawable, parseBook, context, formatRemaining,
   clock, shortTime, longDate, newEntry, writeNote, toggleStrike, isStruck, current, noteCount, hasReading,
   lastWritten, wear, seeded, EXAMPLES, exampleCaption,
 } from "./core.js";
@@ -52,7 +52,7 @@ function loadBook(code) {
 async function resolvePending() {
   const n = Number(pendingDraw());
   const index = await loadIndex();
-  const [book, pos] = locate(index, n);
+  const [book, pos] = drawable(index)[n];
   const verses = await loadBook(book);
   const entry = newEntry(verses[pos], lastDrawAt() || Date.now());
   journal.unshift(entry);
@@ -404,8 +404,7 @@ async function begin() {
     if (remaining() > 0) return;
     let index;
     try { index = await loadIndex(); } catch { draw.error = true; renderDraw(false); return; }
-    const total = index.reduce((n, [, c]) => n + c, 0);
-    store.set(KEY.pending, String(randomIndex(total)));
+    store.set(KEY.pending, String(randomIndex(drawable(index).length)));
     store.set(KEY.last, String(Date.now()));
   }
   const gen = ++draw.gen;

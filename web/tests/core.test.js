@@ -3,7 +3,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, existsSync } from "node:fs";
 import {
-  randomIndex, locate, parseBook, context, formatRemaining, newEntry, writeNote, toggleStrike, isStruck,
+  randomIndex, drawable, parseBook, context, formatRemaining, newEntry, writeNote, toggleStrike, isStruck,
   current, noteCount, hasReading, wear, seeded, strings, reference, EXAMPLES,
 } from "../core.js";
 
@@ -19,12 +19,9 @@ test("randomIndex stays in range and reaches both ends", () => {
   assert.equal(seen.size, 5);
 });
 
-test("locate maps a position across books", () => {
-  const index = [["GEN", 3], ["EXO", 2]];
-  assert.deepEqual(locate(index, 0), ["GEN", 0]);
-  assert.deepEqual(locate(index, 3), ["EXO", 0]);
-  assert.deepEqual(locate(index, 4), ["EXO", 1]);
-  assert.throws(() => locate(index, 5));
+test("drawable spans books and skips name lists", () => {
+  const index = [["GEN", 3, [1]], ["EXO", 2, []]];
+  assert.deepEqual(drawable(index), [["GEN", 0], ["GEN", 2], ["EXO", 0], ["EXO", 1]]);
 });
 
 test("context stays within the chapter", () => {
@@ -89,4 +86,8 @@ test("fixed examples quote the bundled text", { skip: !existsSync(new URL("index
   }
   const index = JSON.parse(readFileSync(new URL("index.json", dataDir), "utf8"));
   assert.equal(index.reduce((n, [, c]) => n + c, 0), 31098);
+  // Joshua 15:54, a bare list of towns, is never drawn.
+  const jos = parseBook("JOS", readFileSync(new URL("JOS.tsv", dataDir), "utf8"));
+  const pos = jos.findIndex((v) => v.chapter === 15 && v.verse === 54);
+  assert.ok(!drawable(index).some(([b, i]) => b === "JOS" && i === pos));
 });

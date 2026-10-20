@@ -17,13 +17,19 @@ struct Verse: Codable, Hashable {
 
 final class Bible {
     let verses: [Verse]
+    /// Positions in `verses` the book may open at: every verse except bare lists of names
+    /// (tools/find_name_lists.py), which give nothing to read into a dilemma.
+    let drawable: [Int]
 
-    init(tsv: String) {
-        verses = tsv.split(separator: "\n").compactMap { line in
+    init(tsv: String, nameLists: String = "") {
+        let verses: [Verse] = tsv.split(separator: "\n").compactMap { line in
             let f = line.split(separator: "\t", omittingEmptySubsequences: false)
             guard f.count == 5, let ch = Int(f[1]), let vs = Int(f[2]) else { return nil }
             return Verse(book: String(f[0]), chapter: ch, verse: vs, ja: String(f[3]), en: String(f[4]))
         }
+        let skipped = Set(nameLists.split(separator: "\n").map(String.init))
+        self.verses = verses
+        drawable = verses.indices.filter { !skipped.contains("\(verses[$0].book)\t\(verses[$0].chapter)\t\(verses[$0].verse)") }
     }
 
     /// Parsed once on first use (31k verses, ~9 MB); the app starts this off the main thread at launch.
@@ -34,13 +40,15 @@ final class Bible {
               let tsv = try? String(contentsOf: url, encoding: .utf8) else {
             fatalError("bible.tsv is missing from the bundle")
         }
-        return Bible(tsv: tsv)
+        let lists = Platform.resourceBundle.url(forResource: "name_lists", withExtension: "tsv")
+            .flatMap { try? String(contentsOf: $0, encoding: .utf8) } ?? ""
+        return Bible(tsv: tsv, nameLists: lists)
     }
 
-    /// Uniformly random verse, using the system's cryptographically secure generator.
+    /// Uniformly random verse among the drawable ones, using the system's cryptographically secure generator.
     func draw() -> Verse {
         var rng = SystemRandomNumberGenerator()
-        return verses.randomElement(using: &rng)!
+        return verses[drawable.randomElement(using: &rng)!]
     }
 
     /// The verse with up to `radius` neighbours on each side, staying within the same chapter.
