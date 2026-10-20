@@ -174,7 +174,10 @@ function noteRow(note, onTap) {
   row.update = (n) => {
     const f = wear(n);
     words.style.color = `rgba(43, 41, 39, ${1 - 0.9 * f ** 0.8})`;
-    words.style.filter = f > 0 ? `blur(${4 * f ** 1.4}px)` : "";
+    // Browsers redraw any blurred text coarsely, so a near-zero blur already looks smudged.
+    // Leave the words sharp until the blur is large enough to be seen, as on the iPhone.
+    const blur = 4 * f ** 1.4;
+    words.style.filter = blur >= 0.3 ? `blur(${blur.toFixed(2)}px)` : "none";
     smudge.style.opacity = n.strikes.length ? 0.15 + 0.8 * f ** 0.6 : 0;
     // A fresh pen line each time: never quite straight, never in quite the same place.
     const r = seeded(n.id, n.strikes.length);
@@ -587,7 +590,7 @@ function guide() {
       h("p", { text: L.guideHistory }),
       h("p", { text: L.guideBody }),
       h("h3", { text: L.guideExamples }),
-      h("div", { class: "examples" }, EXAMPLES[lang].map(exampleCard))),
+      h("div", { class: "examples" }, EXAMPLES[lang].slice(0, 3).map(exampleCard))),
     h("div", { class: "end" }, button(L.guideStart, () => { store.set(KEY.guide, "1"); close(); }, true))));
 }
 

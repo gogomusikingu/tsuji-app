@@ -181,7 +181,8 @@ struct GuideContent: View {
             Text(l.guideHistory).font(Theme.mincho(14)).lineSpacing(6).fixedSize(horizontal: false, vertical: true)
             Text(l.guideBody).font(Theme.mincho(14)).lineSpacing(6).fixedSize(horizontal: false, vertical: true)
             Text(l.guideExamples).font(Theme.mincho(16, bold: true)).padding(.top, 4)
-            ForEach(FixedExamples.all(lang), id: \.ref) { item in
+            // Three are enough to show the method; "see how others read it" shows all six.
+            ForEach(Array(FixedExamples.all(lang).prefix(3)), id: \.ref) { item in
                 ExampleCard(example: item.example, lang: lang, verse: FixedExamples.caption(item, lang))
             }
         }
