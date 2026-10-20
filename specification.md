@@ -151,8 +151,8 @@
 - 振動: 対応するブラウザ（Android など）だけ。iPhone の Safari は振動に対応していない
 - ホーム画面に追加すると、アプリのように全画面で開く（`manifest.webmanifest`、アイコンは iPhone 版から縮小）
 - 生成物（`web/data/`・`web/fonts/`）は Git に入れず、`tools/build_web.py` で作る。公開時は GitHub Actions が作って載せる
-  （手順は `tools/pages.yml`。公開時に `.github/workflows/` へ置くと `main` への push で動く。今の GitHub 連携の権限では
-  この種類のファイルを送れないため、公開時にユーザーが `gh auth refresh -s workflow` で権限を足す）
+  （`.github/workflows/pages.yml`。`main` への push で動き、https://gogomusikingu.github.io/tsuji-app/ に載る。
+  `dev` は作業用で、公開されるのは `main` だけ。公開を許すブランチは Settings → Environments → github-pages で `main` を指定）
 - 確認用: URL に `?cooldown=10` を付けると、10秒で書をひらき直せる
 - テスト: `node --test web/tests/*.test.js`
 
@@ -169,7 +169,7 @@ tools/find_name_lists.py     名前を並べただけの節を探して name_lis
 tools/build_web.py           Web 版の聖書データ・字体・アイコンを作る（tools/.venv の fonttools を使う）
 tools/run_web.sh             Web 版をこの Mac で開く（http://localhost:8765/）
 web/                         Web 版（index.html / style.css / app.js / core.js / mark.js / tests）
-tools/pages.yml              Web 版を GitHub Pages に公開する手順（公開時に .github/workflows/ へ置く）
+.github/workflows/pages.yml  Web 版を GitHub Pages に公開する（main への push で動く）
 Web版を起動.command           Web 版をブラウザで開く（待ち時間10秒）
 tools/run_mac.sh             Mac 試作版のビルドと起動
 tools/run_ios.sh             iPhone 版をビルドしてシミュレーターで起動（画面なし）
@@ -267,9 +267,8 @@ iPhone版を起動.command        Xcode で iPhone 版を開く
 - [ ] Web 版を iPhone の Safari で実際に使い、画面と演出を確認する（ユーザー作業）
 - [x] 公開用リポジトリ `gogomusikingu/tsuji-app` を非公開で作成（2026-10-20）。以後の開発はここで行う
   （元の `gogomusikingu/tsuji` は非公開のまま保管。公開前に、過去の記録も含めて `specification.md` の4行を言い換えた）
-- [ ] `README.md` と `specification.md` を読んで、公開してよいか確認する（ユーザー作業）
-- [ ] `tsuji-app` を公開に切り替え、GitHub Pages で Web 版を公開する（`main` を作成。`tools/pages.yml` を
-  `.github/workflows/` へ置くため、事前に `gh auth refresh -s workflow` で権限を足す）
+- [x] `README.md` と `specification.md` を読んで、公開してよいか確認する（ユーザー作業、2026-10-20）
+- [x] `tsuji-app` を公開し、GitHub Pages で Web 版を公開（2026-10-20、https://gogomusikingu.github.io/tsuji-app/ 。`main` を作成し標準ブランチに）
 - [ ] Apple Developer Program に登録する（App Store に出すと決めたら。年 99 ドル）
 - [ ] 日本語訳を決める（フリーダム・バイブルの訳の質を読んで確認／口語訳の利用条件を確認）
 - [x] Mac 試作版: 3.1 書をひらく、3.2 振り返り（直後・後から記入）、日本語/英語切替
@@ -326,3 +325,4 @@ iPhone版を起動.command        Xcode で iPhone 版を開く
 - 2026-10-20 初回説明の読み方の例を3件に減らした。Web 版の不具合修正: 線を1回引いただけで文字がかすんでいた件（ブラウザはごく弱いぼかしでも文字を粗く描くため、ぼかしが目に見える強さになるまでかけない）
 - 2026-10-20 地名・人名を並べただけの節（約470節）を引く対象から外した（全版）。Web 版: 線を引き直すとき一瞬ぼやけが戻って見えた件を修正（ぼかしの変化をなめらかに動かさない）
 - 2026-10-20 公開用リポジトリ tsuji-app を非公開で作成。審査・売り出し方の記述を、過去の記録も含めて言い換えた
+- 2026-10-20 tsuji-app を公開し、Web 版を GitHub Pages で公開（https://gogomusikingu.github.io/tsuji-app/）。標準ブランチを main に

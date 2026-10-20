@@ -8,6 +8,7 @@
 ## 必要な環境
 ### 使う人
 - Web 版: ブラウザだけ（iPhone の Safari など）。インストール不要。記録はそのブラウザの中だけに残る
+  公開先: https://gogomusikingu.github.io/tsuji-app/
 
 ### 開発する人
 - Mac（Mac 試作版は Command Line Tools だけで動く。iPhone 版は Xcode が必要）
