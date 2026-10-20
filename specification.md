@@ -98,7 +98,7 @@
   `LaunchBackground` / `LaunchQuiet`）。アプリ内の起動画面はマークを同じ位置（画面中央）に置き、途切れずにつながる。
   アイコンを変えたら `--render-previews` で `LaunchQuiet@1x〜3x.png` を作り直して差し替える
   （iPhone は起動画面を一時保存するため、絵を変えたら画像の名前も変えて読み込み直させる）
-- Web 版: 画面だけのサイト（静的サイト）として GitHub Pages に置く（4.3）
+- Web 版: 画面だけのサイト（静的サイト）として GitHub Pages に置く（4.3）。記録はブラウザの localStorage
 
 ### 4.1 Mac 試作版（MVP・2026-10-19）
 - Xcode なしで動く Mac アプリ（Swift Package / SwiftUI）。iPhone 版にコードを流用する前提
@@ -132,10 +132,25 @@
   本番（Release）ビルドでは解除されない
 - 保存は試作版と同じ JSON、画面文字も同じ表のまま（SwiftData・String Catalog への移行は必要になってから）
 
-### 4.3 Web 版（予定）
-- 機能: 3.1 書をひらく、3.2 書き込み（数日後の通知は除く）、3.3 シェア
-- 画面だけのサイトとして GitHub Pages で公開（`main` ブランチから）。記録はブラウザの中に保存し、外へ送らない
-- 見た目・文言は Mac / iPhone 版にそろえる（7.4）。iPhone ではホーム画面に追加してアプリのように使える
+### 4.3 Web 版（2026-10-20 作成）
+- 機能: 3.1 書をひらく、3.2 書き込み（数日後の通知は除く）、3.3 シェア。見た目・文言・演出の時間は iPhone 版にそろえる（7.4・3.5）
+- 作り: 画面だけのサイト（HTML / CSS / JavaScript。ビルド不要）。`web/core.js` に文言・聖書の扱い・書き込みの規則、
+  `web/app.js` に画面、`web/mark.js` に辻マーク（`TsujiMark` と同じ図形）
+- 聖書本文は書ごとのファイル（`web/data/<書>.tsv`）に分け、ひいた節の書だけを読み込む（全体 9MB を毎回読ませないため）
+- 字体: しっぽり明朝を、聖書と画面で使う文字（約2,200字）だけに絞って 0.44MB にした（`web/fonts/verse.woff2`）。
+  それ以外の文字はヒラギノ明朝（なければ游明朝など）
+- 記録はブラウザの中（localStorage）だけに保存し、外へ送らない。別のブラウザ・端末とは共有されない
+- 引き直し防止: 書をひらいた瞬間に「どの節か」と時刻を保存してから演出を始める。途中でページを閉じても、
+  次に開いたときにその節が今日の一節として記録される
+- 言語: 初回はブラウザの言語に合わせる（日本語以外なら英語）。右上で切り替え
+- シェア: 画像を作り、スマホでは共有画面（LINE・X など）へ。共有できないブラウザ（多くのパソコン）では画像を保存する
+- 振動: 対応するブラウザ（Android など）だけ。iPhone の Safari は振動に対応していない
+- ホーム画面に追加すると、アプリのように全画面で開く（`manifest.webmanifest`、アイコンは iPhone 版から縮小）
+- 生成物（`web/data/`・`web/fonts/`）は Git に入れず、`tools/build_web.py` で作る。公開時は GitHub Actions が作って載せる
+  （手順は `tools/pages.yml`。公開時に `.github/workflows/` へ置くと `main` への push で動く。今の GitHub 連携の権限では
+  この種類のファイルを送れないため、公開時にユーザーが `gh auth refresh -s workflow` で権限を足す）
+- 確認用: URL に `?cooldown=10` を付けると、10秒で書をひらき直せる
+- テスト: `node --test web/tests/*.test.js`
 
 ### 4.4 ディレクトリ構成
 ```
@@ -145,6 +160,11 @@ Sources/RandomOracle/Resources/bible.tsv   聖書本文（書・章・節・日�
 Sources/RandomOracle/Resources/ShipporiMincho-*  引用文用の字体（しっぽり明朝 Regular）とそのライセンス（SIL OFL 1.1）
 Tests/RandomOracleTests/     テスト
 tools/build_bible.py         eBible.org のデータから bible.tsv を作る
+tools/build_web.py           Web 版の聖書データ・字体・アイコンを作る（tools/.venv の fonttools を使う）
+tools/run_web.sh             Web 版をこの Mac で開く（http://localhost:8765/）
+web/                         Web 版（index.html / style.css / app.js / core.js / mark.js / tests）
+tools/pages.yml              Web 版を GitHub Pages に公開する手順（公開時に .github/workflows/ へ置く）
+Web版を起動.command           Web 版をブラウザで開く（待ち時間10秒）
 tools/run_mac.sh             Mac 試作版のビルドと起動
 tools/run_ios.sh             iPhone 版をビルドしてシミュレーターで起動（画面なし）
 ios/                         iPhone 版の Xcode プロジェクトとアイコン
@@ -237,7 +257,8 @@ iPhone版を起動.command        Xcode で iPhone 版を開く
 ## 9. TODO
 - [x] Xcode をインストールする（Xcode 27.1。xcode-select は Command Line Tools のままなので、使うときは `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer` を指定）
 - [x] iOS シミュレーターを入れる（iOS 27.1）
-- [ ] Web 版を作る（4.3）
+- [x] Web 版を作る（4.3）
+- [ ] Web 版を iPhone の Safari で実際に使い、画面と演出を確認する（ユーザー作業）
 - [ ] リポジトリを公開し、GitHub Pages で Web 版を公開する（`main` を作成）
 - [ ] Apple Developer Program に登録する（App Store に出すと決めたら。年 99 ドル）
 - [ ] 日本語訳を決める（フリーダム・バイブルの訳の質を読んで確認／口語訳の利用条件を確認）
@@ -291,3 +312,4 @@ iPhone版を起動.command        Xcode で iPhone 版を開く
 - 2026-10-19 不具合修正: iPhone で書き込みの行を押しても横線の確認が出ず画面が薄くなるだけだった件（シェアの幕も同じ作りを修正）。
   フェードの速さを統一（起動画面の消え方・「前後を読む」・「他の人の読み方を見る」を 0.7 秒に）。書をひらいた直後にキーボードを自動で出さないように
 - 2026-10-20 英語名を Sortes から Tsuji に変更（App Store の同名アプリとの重複を避けるため）
+- 2026-10-20 Web 版を作成（書をひらく・書き込み・シェア。記録はブラウザ内のみ。GitHub Pages への公開手順を用意）

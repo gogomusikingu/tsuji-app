@@ -7,7 +7,7 @@
 
 ## 必要な環境
 ### 使う人
-- Web 版（準備中）: ブラウザだけ（iPhone の Safari など）。インストール不要
+- Web 版: ブラウザだけ（iPhone の Safari など）。インストール不要。記録はそのブラウザの中だけに残る
 
 ### 開発する人
 - Mac（Mac 試作版は Command Line Tools だけで動く。iPhone 版は Xcode が必要）
@@ -27,6 +27,17 @@ cd ~/project/Random
 ```sh
 RANDOM_ORACLE_COOLDOWN=10 ./tools/run_mac.sh
 ```
+
+## Web 版の起動（この Mac で確認）
+Finder で `Web版を起動.command` をダブルクリックする（ブラウザで開く。試用モード: 待ち時間10秒）。
+初回は聖書データと字体の準備に数十秒かかる。止めるときはターミナルで Ctrl+C。
+
+```sh
+./tools/run_web.sh                 # 通常（1日1回）
+COOLDOWN=10 ./tools/run_web.sh     # 10秒で書をひらき直せる
+```
+
+公開の仕組みは specification.md の 4.3 を参照。
 
 ## 聖書データ
 eBible.org のパブリックドメイン訳を使用（日本語: フリーダム・バイブル、英語: World English Bible）。

@@ -1,0 +1,202 @@
+/* "The look of a Japanese book": unbleached paper, sumi ink, Mincho type, one vermilion accent. */
+@font-face {
+  font-family: "Shippori Verse";
+  src: url("fonts/verse.woff2") format("woff2");
+  font-display: swap;
+}
+
+:root {
+  --paper: #F5F0E6;        /* 生成り */
+  --paper-deep: #ECE5D8;
+  --ink: #2B2927;          /* 墨 */
+  --ink-faint: rgba(43, 41, 39, 0.55);
+  --shu: #C64730;          /* 朱 */
+  --fade: 0.7s;
+  --mincho: "Hiragino Mincho ProN", "Hiragino Mincho Pro", "Yu Mincho", "YuMincho", "Noto Serif JP", "Noto Serif CJK JP", serif;
+  --verse: "Shippori Verse", var(--mincho);
+  --mark: 130px;
+  --pad: 18px;
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; height: 100%; background: var(--paper); color: var(--ink); }
+body { font-family: var(--mincho); overscroll-behavior: none; -webkit-text-size-adjust: 100%; }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+button:disabled { opacity: 0.35; cursor: default; }
+[hidden] { display: none !important; }
+
+#app {
+  height: 100dvh; max-width: 640px; margin: 0 auto;
+  display: flex; flex-direction: column;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left);
+}
+
+/* Header: the tagline leads, the name sits under it. */
+#header {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 24px; border-bottom: 1px solid rgba(43, 41, 39, 0.15);
+}
+.titles { flex: 1; min-width: 0; }
+.tagline { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.appname { font-size: 11px; color: var(--ink-faint); margin-top: 2px; }
+.quiet { font-size: 12px; color: var(--ink-faint); }
+.help { width: 20px; height: 20px; border: 1px solid var(--ink-faint); border-radius: 50%; font-size: 12px; line-height: 18px; }
+
+/* Bottom bar: two items in the book's type. */
+#tabs {
+  display: flex; border-top: 1px solid rgba(43, 41, 39, 0.12);
+  padding: 10px 0 calc(4px + env(safe-area-inset-bottom));
+}
+#tabs button { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 10px; color: var(--ink-faint); }
+#tabs button.on { color: var(--shu); }
+#tabs svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.3; stroke-linecap: round; stroke-linejoin: round; }
+#tabs svg .front { fill: var(--paper); }
+
+/* Views dissolve into each other: every child of a stack shares one grid cell. */
+.stack { display: grid; flex: 1; min-height: 0; position: relative; }
+.stack > * { grid-area: 1 / 1; min-height: 0; min-width: 0; }
+.fade { transition: opacity var(--fade) ease-in-out; }
+.fade.out { opacity: 0; pointer-events: none; }
+
+.scroll { overflow-y: auto; -webkit-overflow-scrolling: touch; padding: var(--pad) calc(var(--pad) + 8px); }
+.screen { padding: var(--pad); }
+
+/* The mark at the exact centre of the screen, same size everywhere, words underneath. */
+.stage { position: fixed; inset: 0; pointer-events: none; }
+.stage .mark { position: absolute; left: 50%; top: 50%; width: var(--mark); height: var(--mark); transform: translate(-50%, -50%); }
+.stage .below {
+  position: absolute; left: 0; right: 0; top: calc(50% + var(--mark) / 2 + 32px);
+  display: flex; flex-direction: column; align-items: center; gap: 18px;
+  text-align: center; pointer-events: auto; padding: 0 24px;
+}
+.mark-verse { transition: opacity 2s ease-in-out; }
+.lede { font-size: 16px; line-height: 1.6; white-space: pre-line; margin: 0; }
+.faint { color: var(--ink-faint); }
+.small { font-size: 13px; }
+.tiny { font-size: 11px; }
+.digits { font-variant-numeric: tabular-nums; }
+
+/* Buttons: Mincho label, vermilion outline or fill. */
+.ink-button {
+  font-size: 15px; padding: 10px 22px; border-radius: 3px;
+  color: var(--shu); border: 1px solid var(--shu); background: transparent;
+}
+.ink-button.filled { color: var(--paper); background: var(--shu); }
+.ink-button:active { opacity: 0.7; }
+.link { color: var(--shu); font-size: 13px; }
+
+/* Splash: a book's title page. */
+#splash { position: fixed; inset: 0; background: var(--paper); z-index: 50; }
+#splash .t1 { font-size: 24px; font-weight: 600; }
+#splash .t2 { font-size: 18px; color: var(--ink-faint); }
+#splash .t1, #splash .t2 { opacity: 0; transition: opacity 1.2s ease-in-out; }
+#splash .t1.on, #splash .t2.on { opacity: 1; }
+html[lang="en"] #splash .t1 { font-size: 22px; }
+
+/* Focusing: words surface one at a time. */
+.focus-words { display: grid; font-size: 15px; color: var(--ink-faint); }
+.focus-words > * { grid-area: 1 / 1; opacity: 0; transition: opacity 1.2s ease-in-out; }
+.focus-words > .on { opacity: 1; }
+
+/* The verse page, with a vermilion ribbon where the book fell open. */
+.page {
+  position: relative; background: rgba(255, 255, 255, 0.55);
+  box-shadow: 0 2px 6px rgba(43, 41, 39, 0.12);
+  padding: 48px 40px 28px;
+}
+.page::after { content: ""; position: absolute; top: -8px; right: 36px; width: 6px; height: 54px; background: var(--shu); }
+.page .verses { display: flex; flex-direction: column; gap: 14px; }
+.page .v { display: flex; gap: 10px; align-items: baseline; }
+.page .n { font-size: 10px; color: var(--ink-faint); }
+.page .text { font-family: var(--verse); font-size: 21px; line-height: 1.75; margin: 0; }
+.page .around { font-size: 13px; line-height: 1.5; color: var(--ink-faint); }
+.page .foot { display: flex; justify-content: space-between; align-items: baseline; padding-top: 20px; gap: 12px; }
+.page .foot .link { font-size: 11px; }
+.page .ref { font-size: 12px; color: var(--ink-faint); text-align: right; }
+@media (max-width: 380px) { .page { padding: 44px 26px 24px; } .page .text { font-size: 19px; } }
+
+.turn { perspective: 1400px; }
+.turn .page { transform-origin: left center; transform: rotateY(90deg); opacity: 0; }
+.turn.turned .page { transform: rotateY(0deg); opacity: 1;
+  transition: transform 1.2s cubic-bezier(0, 0, 0.58, 1) 0.3s, opacity 0.01s linear 0.3s; }
+
+.col { display: flex; flex-direction: column; gap: 20px; }
+.row { display: flex; align-items: center; gap: 12px; }
+.spacer { flex: 1; }
+.rule { height: 1px; background: rgba(43, 41, 39, 0.12); }
+.day-head { display: flex; justify-content: space-between; align-items: baseline; font-size: 15px; }
+
+/* Writings. */
+.notes { display: flex; flex-direction: column; gap: 18px; }
+.notes .q { font-size: 14px; margin: 0 0 8px; }
+.notes .hint { font-size: 10px; color: var(--ink-faint); }
+.note { display: flex; gap: 10px; align-items: baseline; padding-left: 14px; cursor: pointer; margin-bottom: 8px; }
+.note .body { flex: 1; min-width: 0; }
+/* The worn patch sits under the words only, not the whole row. */
+.note .ink { display: inline-block; position: relative; max-width: 100%; font-size: 13px; line-height: 1.45; }
+.note .words { position: relative; white-space: pre-wrap; word-break: break-word;
+  transition: color 1s ease-in-out, filter 1s ease-in-out; }
+.note .strike { position: absolute; inset: 0; white-space: pre-wrap; word-break: break-word; color: transparent; text-decoration: line-through; text-decoration-color: rgba(43, 41, 39, 0.8);
+  text-decoration-thickness: 1px; pointer-events: none; transition: opacity 1s ease-in-out; }
+.note .smudge { position: absolute; inset: 0 -4px; filter: blur(6px); pointer-events: none; transition: opacity 1s ease-in-out; }
+.note .smudge i { position: absolute; border-radius: 50%; background: #DBD1BF; }
+.note time { font-size: 10px; color: var(--ink-faint); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.add { padding-left: 14px; }
+.add .link { font-size: 12px; }
+.compose { display: flex; gap: 8px; align-items: flex-end; padding-left: 14px; }
+.compose textarea {
+  flex: 1; font: 16px/1.45 var(--mincho); color: var(--ink); background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(43, 41, 39, 0.25); border-radius: 5px; padding: 6px 8px; resize: none; overflow: hidden; min-height: 34px;
+}
+.compose textarea:focus { outline: none; border-color: var(--shu); }
+.compose .ink-button { padding: 6px 14px; font-size: 14px; }
+.disclosure { color: var(--shu); font-size: 14px; display: inline-flex; gap: 6px; align-items: center; }
+.disclosure i { font-style: normal; font-size: 9px; }
+
+/* Sample readings. */
+.example { background: rgba(236, 229, 216, 0.6); padding: 14px; font-size: 12px; display: flex; flex-direction: column; gap: 6px; }
+.example .ev { font-family: var(--verse); font-size: 13px; line-height: 1.5; margin-bottom: 4px; }
+.example .er { display: flex; gap: 8px; }
+.example .er b { font-weight: normal; color: var(--shu); flex: 0 0 100px; }
+html[lang="ja"] .example .er b { flex-basis: 7.5em; }
+
+/* Covers: content laid over a veil of paper, faded in and out. Touches wait for the fade. */
+.cover {
+  position: fixed; inset: 0; z-index: 40; background: rgba(245, 240, 230, 0.94);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity var(--fade) ease-in-out; pointer-events: none;
+  padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+}
+.cover.shown { opacity: 1; }
+.cover.ready { pointer-events: auto; }
+.sheet { max-width: 420px; width: calc(100% - 48px); background: var(--paper); box-shadow: 0 2px 10px rgba(43, 41, 39, 0.12); padding: 28px; }
+.sheet h2 { font-size: 17px; margin: 0 0 16px; }
+.sheet .quote { font-size: 14px; line-height: 1.5; margin: 0 0 16px; white-space: pre-wrap; }
+.sheet .buttons { display: flex; gap: 12px; padding-top: 6px; flex-wrap: wrap; }
+
+.guide { width: 100%; max-width: 580px; height: 100%; display: flex; flex-direction: column; padding: 32px; gap: 18px; }
+.guide .scroll { flex: 1; padding: 0 8px 0 0; }
+.guide h1 { font-size: 22px; margin: 0 0 18px; }
+.guide h3 { font-size: 16px; margin: 22px 0 18px; }
+.guide p { font-size: 14px; line-height: 1.75; margin: 0 0 18px; white-space: pre-line; }
+.poem { border-left: 2px solid var(--shu); padding-left: 14px; margin-bottom: 18px; }
+.poem .waka { font-size: 17px; line-height: 2; white-space: pre-line; margin: 0 0 10px; }
+.poem p { font-size: 13px; color: var(--ink-faint); line-height: 1.6; margin: 10px 0 0; }
+.guide .examples { display: flex; flex-direction: column; gap: 12px; }
+.guide .end { display: flex; justify-content: flex-end; }
+
+.share { width: calc(100% - 32px); max-width: 440px; display: flex; flex-direction: column; gap: 18px; align-items: center; padding: 28px 0; max-height: 100%; }
+.share h2 { font-size: 16px; margin: 0; }
+.share img { max-width: 100%; max-height: 58dvh; object-fit: contain; box-shadow: 0 2px 6px rgba(43, 41, 39, 0.15); }
+.share label { font-size: 13px; display: flex; gap: 8px; align-items: center; align-self: stretch; }
+.share input { accent-color: var(--shu); width: 18px; height: 18px; }
+.share .buttons { display: flex; justify-content: space-between; align-self: stretch; }
+
+/* Records: a tear-off calendar. */
+.records { display: flex; flex-direction: column; min-height: 0; }
+.records .stack { flex: 1; }
+.records nav { display: flex; align-items: center; justify-content: space-between; padding: 10px calc(var(--pad) + 8px) 12px; }
+.records nav button { color: var(--shu); font-size: 13px; }
+.empty { display: flex; align-items: center; justify-content: center; font-size: 14px; color: var(--ink-faint); }
+
+@media (min-width: 700px) { :root { --pad: 32px; } }
