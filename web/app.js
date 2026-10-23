@@ -130,15 +130,29 @@ function cover(build) {
 function versePage(verse) {
   const verses = h("div", { class: "verses fade" });
   let around = false;
+  let turn = 0;
   const toggle = link(L.showContext, async () => {
     around = !around;
+    const mine = ++turn;
     toggle.textContent = around ? L.hideContext : L.showContext;
     let shown = [verse];
     if (around) { try { shown = context(await loadBook(verse.book), verse, 2); } catch { /* offline: verse only */ } }
+    // Fade out fully, swap, then let the page grow or shrink to its new height while the words
+    // fade back in, so closing the context is as gentle as opening it.
+    const from = verses.offsetHeight;
+    verses.style.height = `${from}px`;
     verses.classList.add("out");
-    await later(FADE / 2);
+    await later(FADE);
+    if (mine !== turn) return;
     fill(shown);
+    verses.style.height = "";
+    const to = verses.offsetHeight;
+    verses.style.height = `${from}px`;
+    verses.offsetHeight;
+    verses.style.height = `${to}px`;
     verses.classList.remove("out");
+    await later(FADE);
+    if (mine === turn) verses.style.height = "";
   });
   const fill = (list) => {
     verses.replaceChildren(...list.map((v) => {

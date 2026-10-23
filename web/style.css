@@ -111,7 +111,8 @@ html[lang="en"] #splash .t1 { font-size: 22px; }
   padding: 48px 40px 28px;
 }
 .page::after { content: ""; position: absolute; top: -8px; right: 36px; width: 6px; height: 54px; background: var(--shu); }
-.page .verses { display: flex; flex-direction: column; gap: 14px; }
+.page .verses { display: flex; flex-direction: column; gap: 14px; overflow: hidden;
+  transition: opacity var(--fade) ease-in-out, height var(--fade) ease-in-out; }
 .page .v { display: flex; gap: 10px; align-items: baseline; }
 .page .n { font-size: 10px; color: var(--ink-faint); }
 .page .text { font-family: var(--verse); font-size: 21px; line-height: 1.75; margin: 0; }
