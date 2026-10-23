@@ -76,6 +76,12 @@ button:disabled { opacity: 0.35; cursor: default; }
 .tiny { font-size: 11px; }
 .digits { font-variant-numeric: tabular-nums; }
 
+/* Topic choice: six quiet chips in two rows. */
+.topics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; max-width: 340px; }
+.topic { font-size: 13px; padding: 8px 4px; white-space: nowrap; border: 1px solid rgba(43, 41, 39, 0.3); border-radius: 3px; }
+.topic:active { color: var(--shu); border-color: var(--shu); }
+html[lang="en"] .topic { font-size: 12px; }
+
 /* Buttons: Mincho label, vermilion outline or fill. */
 .ink-button {
   font-size: 15px; padding: 10px 22px; border-radius: 3px;
@@ -94,7 +100,7 @@ button:disabled { opacity: 0.35; cursor: default; }
 html[lang="en"] #splash .t1 { font-size: 22px; }
 
 /* Focusing: words surface one at a time. */
-.focus-words { display: grid; font-size: 15px; color: var(--ink-faint); }
+.focus-words { display: grid; font-size: 15px; white-space: pre-line; line-height: 1.6; color: var(--ink-faint); }
 .focus-words > * { grid-area: 1 / 1; opacity: 0; transition: opacity 1.2s ease-in-out; }
 .focus-words > .on { opacity: 1; }
 

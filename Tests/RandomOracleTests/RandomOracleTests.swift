@@ -13,10 +13,13 @@ import Testing
 @Test func nameListsAreNeverDrawn() {
     let bible = Bible.shared
     let skipped = bible.verses.count - bible.drawable.count
-    #expect(skipped > 400 && skipped < 600)
+    #expect(skipped > 700 && skipped < 900)
     // Joshua 15:54 is a bare list of towns.
     let i = bible.verses.firstIndex { $0.book == "JOS" && $0.chapter == 15 && $0.verse == 54 }!
     #expect(!bible.drawable.contains(i))
+    // Matthew 1:3 is a genealogy.
+    let g = bible.verses.firstIndex { $0.book == "MAT" && $0.chapter == 1 && $0.verse == 3 }!
+    #expect(!bible.drawable.contains(g))
     // Still there for "read around it".
     #expect(bible.context(of: bible.verses[i + 1], radius: 2).contains(bible.verses[i]))
 }

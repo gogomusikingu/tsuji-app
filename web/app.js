@@ -2,7 +2,7 @@
 import {
   DAY, KINDS, strings, verseText, reference, randomIndex, drawable, parseBook, context, formatRemaining,
   clock, shortTime, longDate, newEntry, writeNote, toggleStrike, isStruck, current, noteCount, hasReading,
-  lastWritten, wear, seeded, EXAMPLES, exampleCaption,
+  lastWritten, wear, seeded, EXAMPLES, exampleCaption, TOPICS,
 } from "./core.js";
 import { markSVG, OUTLINE, INNER, VERSE } from "./mark.js";
 
@@ -13,7 +13,7 @@ const INTERVAL = params.has("cooldown") ? Number(params.get("cooldown")) * 1000 
 
 // --- Storage (this browser only) ---------------------------------------------------------------
 
-const KEY = { lang: "tsuji.lang", guide: "tsuji.guideSeen", last: "tsuji.lastDrawAt", pending: "tsuji.pendingDraw", journal: "tsuji.journal" };
+const KEY = { lang: "tsuji.lang", guide: "tsuji.guideSeen", last: "tsuji.lastDrawAt", pending: "tsuji.pendingDraw", topic: "tsuji.pendingTopic", journal: "tsuji.journal" };
 const store = {
   get(k) { try { return localStorage.getItem(k); } catch { return null; } },
   set(k, v) { try { localStorage.setItem(k, v); } catch { /* private mode: lives for this visit only */ } },
@@ -54,10 +54,11 @@ async function resolvePending() {
   const index = await loadIndex();
   const [book, pos] = drawable(index)[n];
   const verses = await loadBook(book);
-  const entry = newEntry(verses[pos], lastDrawAt() || Date.now());
+  const entry = newEntry(verses[pos], lastDrawAt() || Date.now(), store.get(KEY.topic));
   journal.unshift(entry);
   saveJournal();
   store.remove(KEY.pending);
+  store.remove(KEY.topic);
   return entry;
 }
 
@@ -252,7 +253,7 @@ function notesSection(entryID, kinds, { openFirst = false, onChange } = {}) {
         } else {
           tail = h("div", { class: "add" }, link(L.write, () => open(kind)));
         }
-        return h("div", {}, h("p", { class: "q", text: L.question(kind) }), ...lines, tail);
+        return h("div", {}, h("p", { class: "q", text: L.question(kind, entry.topic) }), ...lines, tail);
       })]));
     if (focus && input) input.focus();
   }
@@ -293,7 +294,7 @@ function notesDisclosure(entryID) {
 /** One day's page, shared by today's verse at home and each page of the journal. */
 function verseDay(title, entry, footer) {
   return h("div", { class: "scroll" }, h("div", { class: "col", style: "gap:18px;padding-bottom:12px" },
-    h("div", { class: "day-head" }, h("span", { text: title }), h("span", { class: "tiny faint", text: L.openedAt(clock(entry.date)) })),
+    h("div", { class: "day-head" }, h("span", { text: title }), h("span", { class: "tiny faint", text: [L.topic(entry.topic), L.openedAt(clock(entry.date))].filter(Boolean).join("　") })),
     versePage(entry.verse),
     notesDisclosure(entry.id),
     h("div", {}, link(L.share, () => shareSheet(entryByID(entry.id) ?? entry))),
@@ -302,7 +303,7 @@ function verseDay(title, entry, footer) {
 
 // --- Opening the book ---------------------------------------------------------------------------
 
-const draw = { phase: "idle", entryID: null, step: 0, showToday: false, error: false, gen: 0, idleKey: "" };
+const draw = { phase: "idle", topic: null, entryID: null, step: 0, showToday: false, error: false, gen: 0, idleKey: "" };
 let drawSlot = null;
 
 function idleKey() {
@@ -314,7 +315,8 @@ function idleKey() {
 function renderDraw(animated = true) {
   if (!drawSlot) return;
   let view;
-  if (draw.phase === "focusing") view = focusingView();
+  if (draw.phase === "choosing") view = topicView();
+  else if (draw.phase === "focusing") view = focusingView();
   else if (draw.phase === "revealed") view = revealedView();
   else {
     draw.idleKey = idleKey();
@@ -327,7 +329,7 @@ function introView() {
   const ready = draw.idleKey === "ready";
   return h("div", {}, stage(0,
     h("p", { class: "lede", text: L.intro }),
-    ready ? button(L.openButton, begin, true) : countdown(),
+    ready ? button(L.openButton, choose, true) : countdown(),
     draw.error && h("p", { class: "tiny faint", style: "max-width:300px", text: L.loadFailed })));
 }
 
@@ -346,9 +348,22 @@ function todayView() {
   return verseDay(L.todayTitle, journal[0], h("div", { style: "text-align:center;padding-top:12px" }, countdown("tiny")));
 }
 
+function choose() {
+  draw.phase = "choosing";
+  renderDraw();
+}
+
+/** Naming what the dilemma is about, so there is something to hold in mind. The verse stays
+ *  wholly random; the choice only names the dilemma in the questions. */
+function topicView() {
+  const chips = h("div", { class: "topics" },
+    Object.keys(TOPICS).map((t) => h("button", { class: "topic", text: L.topic(t), onclick: () => begin(t) })));
+  return h("div", {}, stage(0, h("p", { class: "lede", text: L.topicQuestion }), chips));
+}
+
 /** The pause before the page turns: the mark stays still; only its verse line surfaces. */
 function focusingView() {
-  const words = h("div", { class: "focus-words" }, h("span", { text: L.focusing }), h("span", { text: L.focusingOpen }));
+  const words = h("div", { class: "focus-words" }, h("span", { text: L.focusing(draw.topic) }), h("span", { text: L.focusingOpen }));
   const view = h("div", {}, stage(0, words));
   const line = view.querySelector(".mark-verse");
   line.style.transition = "opacity 5.5s ease-in-out 0.6s";
@@ -398,15 +413,17 @@ function revealedView() {
   return view;
 }
 
-async function begin() {
+async function begin(topic) {
   // Commit the draw before showing it, so leaving mid-way cannot be used to draw again.
   if (!pendingDraw()) {
     if (remaining() > 0) return;
     let index;
-    try { index = await loadIndex(); } catch { draw.error = true; renderDraw(false); return; }
+    try { index = await loadIndex(); } catch { draw.phase = "idle"; draw.error = true; renderDraw(false); return; }
     store.set(KEY.pending, String(randomIndex(drawable(index).length)));
+    store.set(KEY.topic, topic);
     store.set(KEY.last, String(Date.now()));
   }
+  draw.topic = store.get(KEY.topic) ?? topic;
   const gen = ++draw.gen;
   const started = Date.now();
   draw.error = false;

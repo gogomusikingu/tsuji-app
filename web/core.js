@@ -14,10 +14,9 @@ const T = {
   intro: ["迷いをひとつ、心に思い浮かべてください\n書は無作為にひらかれます\n引き直しはできません",
     "Hold one dilemma in your mind.\nThe book opens at random.\nThere is no second draw."],
   openButton: ["書をひらく", "Open the book"],
-  focusing: ["目を閉じて、迷いを思い浮かべて…", "Close your eyes and hold your dilemma…"],
+  topicQuestion: ["何についての迷いですか？", "What is your dilemma about?"],
   focusingOpen: ["一節が、浮かび上がります", "A verse rises to the page"],
   step1: ["いちばん目に止まった言葉はどれですか？", "Which words caught your eye first?"],
-  step2: ["その言葉を、迷いに置き換えるとしたら？", "If those words were about your dilemma, what would they mean?"],
   step3: ["では、どうしますか？", "So, what will you do?"],
   next: ["次へ", "Next"],
   stepOutcome: ["その後、どうなりましたか？", "What happened afterwards?"],
@@ -68,15 +67,31 @@ const T = {
   langToggle: ["EN", "日本語"],
 };
 
+/** What the dilemma is about, chosen before the book opens. It never changes which verse comes;
+ *  it only names the dilemma in the questions. "other" leaves the dilemma unnamed. */
+export const TOPICS = {
+  people: ["人間関係", "Relationships", "人間関係の迷い", "your relationship dilemma"],
+  work: ["仕事・学び", "Work & study", "仕事・学びの迷い", "your work or study dilemma"],
+  money: ["お金", "Money", "お金の迷い", "your money dilemma"],
+  health: ["からだ・こころ", "Body & mind", "からだ・こころの迷い", "your body or mind dilemma"],
+  life: ["暮らし", "Daily life", "暮らしの迷い", "your everyday dilemma"],
+  other: ["その他", "Something else", "迷い", "your dilemma"],
+};
+
 export function strings(lang) {
   const i = lang === "ja" ? 0 : 1;
   const s = Object.fromEntries(Object.entries(T).map(([k, v]) => [k, v[i]]));
+  s.topic = (t) => TOPICS[t]?.[i] ?? "";
+  const dilemma = (t) => (TOPICS[t] ?? TOPICS.other)[2 + i];
+  s.focusing = (t) => (i === 0 ? `目を閉じて、\n${dilemma(t)}を思い浮かべて…` : `Close your eyes and\nhold ${dilemma(t)}…`);
+  s.step2 = (t) => (i === 0 ? `その言葉を、${dilemma(t)}に置き換えるとしたら？`
+    : `If those words were about ${dilemma(t)}, what would they mean?`);
   s.writings = (n) => (i === 0 ? `書き込み（${n}）` : `Writings (${n})`);
   s.lastWritten = (t) => (i === 0 ? `最後の書き込み ${t}` : `Last written ${t}`);
   s.openedAt = (t) => (i === 0 ? `${t} にひらいた` : `opened ${t}`);
   s.nextDraw = (r) => (i === 0 ? `次に書をひらけるまで ${r}` : `Next opening in ${r}`);
-  s.question = (kind) => ({
-    keyword: `一　${s.step1}`, interpretation: `二　${s.step2}`, action: `三　${s.step3}`, outcome: s.stepOutcome,
+  s.question = (kind, topic) => ({
+    keyword: `一　${s.step1}`, interpretation: `二　${s.step2(topic)}`, action: `三　${s.step3}`, outcome: s.stepOutcome,
   })[kind];
   return s;
 }
@@ -178,8 +193,8 @@ export function uuid() {
 
 // --- Journal entries: lines can be added and struck through (or restored), never edited or removed.
 
-export function newEntry(verse, now = Date.now()) {
-  return { id: uuid(), date: now, verse, notes: { keyword: [], interpretation: [], action: [], outcome: [] } };
+export function newEntry(verse, now = Date.now(), topic = null) {
+  return { id: uuid(), date: now, verse, topic, notes: { keyword: [], interpretation: [], action: [], outcome: [] } };
 }
 
 export function writeNote(entry, kind, text, now = Date.now()) {
@@ -233,6 +248,8 @@ export const EXAMPLES = {
       ["転職するか迷っている", "パンのことではなく、教えのことだった", "給料（パン）の話だと思っていたが、本当の悩みは「誰から学べるか」かもしれない", "今の職場と転職先で、学べる人がいるかを書き出す"]],
     ["するとルベン人、ガド人、およびマナセの半部族は答えて、イスラエルの千人隊のかしらたちに言った。", "ヨシュア記 22章21節",
       ["上司に不満を伝えるか迷っている", "答えて、かしらたちに言った", "答えたのは一人ではなく三つの部族。一人で抱えず、仲間とそろって言えばいい", "同僚に声をかけ、一緒に伝える"]],
+    ["ユダとタマルの間にペレツとゼラが生まれ、ペレツにヘツロンが生まれ、ヘツロンにラムが生まれた。", "マタイによる福音書 1章3節",
+      ["昼ごはんを何にするか迷っている", "タマル", "タマルは、タマゴに字面が似ている。意味がわからなくても、字面からこじつけていい", "昼ごはんは玉子料理にする"]],
     ["そこで、ユダとベニヤミンの父祖の家の長たち、祭司たち、レビ人たち、すなわち、エルサレムにある主の家を建てるために上るよう神がその霊を奮い立たせられたすべての者が立ち上がった。", "エズラ記 1章5節",
       ["地方へ引っ越すか迷っている", "霊を奮い立たせられたすべての者が立ち上がった", "立ち上がったのは、心が奮い立った者だけ。理屈より、心が動くかどうかで決めていい", "引っ越し先を一度訪ねて、心が動くか確かめる"]],
     ["主はモーセに告げられた。", "レビ記 24章1節",
@@ -247,6 +264,8 @@ export const EXAMPLES = {
       ["Whether to change jobs", "not the yeast of bread, but the teaching", "I thought it was about pay (bread), but the real question may be who I can learn from", "List the people I could learn from at each workplace"]],
     ["Then the children of Reuben and the children of Gad and the half-tribe of Manasseh answered, and spoke to the heads of the thousands of Israel,", "Joshua 22:21",
       ["Whether to raise a complaint with my boss", "answered, and spoke to the heads", "It was not one person who answered, but three tribes together. I don’t have to do it alone", "Ask a colleague to raise it with me"]],
+    ["Judah became the father of Perez and Zerah by Tamar. Perez became the father of Hezron. Hezron became the father of Ram.", "Matthew 1:3",
+      ["What to have for lunch", "Tamar", "Tamar sounds a little like tomato. Even without knowing what it means, I can bend the sound of it", "Have something with tomatoes for lunch"]],
     ["Then the heads of fathers’ households of Judah and Benjamin, the priests and the Levites, all whose spirit God had stirred to go up, rose up to build the LORD’s house which is in Jerusalem.", "Ezra 1:5",
       ["Whether to move to the countryside", "all whose spirit God had stirred … rose up", "Only those whose spirit was stirred rose up. I can decide by whether my heart moves, not by logic", "Visit the town once and see if my heart is stirred"]],
     ["The LORD spoke to Moses, saying,", "Leviticus 24:1",

@@ -74,6 +74,16 @@ test("strings and references in both languages", () => {
   assert.equal(reference(verse, "en"), "Genesis 1:1");
 });
 
+test("the chosen topic names the dilemma, and only that", () => {
+  const ja = strings("ja");
+  assert.equal(ja.question("interpretation", "money"), "二　その言葉を、お金の迷いに置き換えるとしたら？");
+  assert.equal(ja.question("interpretation", "other"), "二　その言葉を、迷いに置き換えるとしたら？");
+  assert.equal(ja.question("interpretation", undefined), ja.question("interpretation", "other"));
+  assert.equal(strings("en").focusing("work"), "Close your eyes and\nhold your work or study dilemma…");
+  assert.equal(newEntry(verse, 0, "people").topic, "people");
+  assert.equal(newEntry(verse, 0).topic, null);
+});
+
 // Checks against the generated data, when it has been built (tools/build_web.py).
 const dataDir = new URL("../data/", import.meta.url);
 test("fixed examples quote the bundled text", { skip: !existsSync(new URL("index.json", dataDir)) }, () => {
@@ -90,4 +100,8 @@ test("fixed examples quote the bundled text", { skip: !existsSync(new URL("index
   const jos = parseBook("JOS", readFileSync(new URL("JOS.tsv", dataDir), "utf8"));
   const pos = jos.findIndex((v) => v.chapter === 15 && v.verse === 54);
   assert.ok(!drawable(index).some(([b, i]) => b === "JOS" && i === pos));
+  // Nor is Matthew 1:3, a genealogy (it is shown only as an example of bending the words).
+  const mat = parseBook("MAT", readFileSync(new URL("MAT.tsv", dataDir), "utf8"));
+  const gen = mat.findIndex((v) => v.chapter === 1 && v.verse === 3);
+  assert.ok(!drawable(index).some(([b, i]) => b === "MAT" && i === gen));
 });
