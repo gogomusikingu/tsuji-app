@@ -57,6 +57,8 @@ button:disabled { opacity: 0.35; cursor: default; }
 .stack > * { grid-area: 1 / 1; min-height: 0; min-width: 0; }
 .fade { transition: opacity var(--fade) ease-in-out; }
 .fade.out { opacity: 0; pointer-events: none; }
+/* A block easing to a new height (swapGently / easeHeight in app.js). */
+.resizing { overflow: hidden; transition: opacity var(--fade) ease-in-out, height var(--fade) ease-in-out; }
 
 .scroll { overflow-y: auto; -webkit-overflow-scrolling: touch; padding: var(--pad) calc(var(--pad) + 8px); }
 .screen { padding: var(--pad); }
@@ -111,8 +113,7 @@ html[lang="en"] #splash .t1 { font-size: 22px; }
   padding: 48px 40px 28px;
 }
 .page::after { content: ""; position: absolute; top: -8px; right: 36px; width: 6px; height: 54px; background: var(--shu); }
-.page .verses { display: flex; flex-direction: column; gap: 14px; overflow: hidden;
-  transition: opacity var(--fade) ease-in-out, height var(--fade) ease-in-out; }
+.page .verses { display: flex; flex-direction: column; gap: 14px; }
 .page .v { display: flex; gap: 10px; align-items: baseline; }
 .page .n { font-size: 10px; color: var(--ink-faint); }
 .page .text { font-family: var(--verse); font-size: 21px; line-height: 1.75; margin: 0; }

@@ -81,6 +81,37 @@ const clean = (nodes) => nodes.flat().filter((c) => c != null && c !== false);
 const button = (text, onclick, filled = false) => h("button", { class: `ink-button${filled ? " filled" : ""}`, text, onclick });
 const link = (text, onclick) => h("button", { class: "link", text, onclick });
 const later = (ms) => new Promise((r) => setTimeout(r, ms));
+
+/** Lets something new surface slowly, like everything else in the app. */
+const fadeIn = (el) => el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: FADE, easing: "ease-in-out" });
+
+/** Eases `el` from height `from` to the height of what it now holds, so nothing below it jumps. */
+async function easeHeight(el, from) {
+  const mine = (el.easing = (el.easing ?? 0) + 1);
+  el.style.height = "";
+  const to = el.offsetHeight;
+  if (to === from) { el.classList.remove("resizing"); return; }
+  el.classList.add("resizing");
+  el.style.height = `${from}px`;
+  el.offsetHeight;
+  el.style.height = `${to}px`;
+  await later(FADE);
+  if (mine === el.easing) { el.style.height = ""; el.classList.remove("resizing"); }
+}
+
+/** Fades `el` out completely, lets `fill` change what it holds, then fades it back in while its
+ *  height eases to fit. Used wherever a block is swapped for one of another size. */
+async function swapGently(el, fill) {
+  const mine = (el.swapping = (el.swapping ?? 0) + 1);
+  const from = el.offsetHeight;
+  el.style.height = `${from}px`;
+  el.classList.add("fade", "resizing", "out");
+  await later(FADE);
+  if (mine !== el.swapping) return;
+  fill();
+  el.classList.remove("out");
+  easeHeight(el, from);
+}
 const countdown = (cls = "small") => h("span", { class: `countdown faint digits ${cls}`, text: L.nextDraw(formatRemaining(remaining())) });
 
 /** A place where views dissolve into each other: the old one fades out as the new one fades in. */
@@ -130,29 +161,12 @@ function cover(build) {
 function versePage(verse) {
   const verses = h("div", { class: "verses fade" });
   let around = false;
-  let turn = 0;
   const toggle = link(L.showContext, async () => {
     around = !around;
-    const mine = ++turn;
     toggle.textContent = around ? L.hideContext : L.showContext;
     let shown = [verse];
     if (around) { try { shown = context(await loadBook(verse.book), verse, 2); } catch { /* offline: verse only */ } }
-    // Fade out fully, swap, then let the page grow or shrink to its new height while the words
-    // fade back in, so closing the context is as gentle as opening it.
-    const from = verses.offsetHeight;
-    verses.style.height = `${from}px`;
-    verses.classList.add("out");
-    await later(FADE);
-    if (mine !== turn) return;
-    fill(shown);
-    verses.style.height = "";
-    const to = verses.offsetHeight;
-    verses.style.height = `${from}px`;
-    verses.offsetHeight;
-    verses.style.height = `${to}px`;
-    verses.classList.remove("out");
-    await later(FADE);
-    if (mine === turn) verses.style.height = "";
+    swapGently(verses, () => fill(shown));
   });
   const fill = (list) => {
     verses.replaceChildren(...list.map((v) => {
@@ -220,6 +234,7 @@ function notesSection(entryID, kinds, { openFirst = false, onChange } = {}) {
   let writing = null;
   let draft = "";
   const rows = new Map();
+  let shownKeys = null;
 
   const save = (kind) => {
     const entry = entryByID(entryID);
@@ -250,10 +265,12 @@ function notesSection(entryID, kinds, { openFirst = false, onChange } = {}) {
     if (!entry) return;
     rows.clear();
     let input = null;
+    const from = el.offsetHeight;
+    const keyed = (key, node) => { node.dataset.key = key; return node; };
     el.replaceChildren(...clean([
-      noteCount(entry) > 0 && h("div", { class: "hint", text: L.strikeHint }),
+      noteCount(entry) > 0 && keyed("hint", h("div", { class: "hint", text: L.strikeHint })),
       ...kinds.map((kind) => {
-        const lines = entry.notes[kind].map((n) => { const r = noteRow(n, () => tap(kind, n)); rows.set(n.id, r); return r; });
+        const lines = entry.notes[kind].map((n) => { const r = keyed(n.id, noteRow(n, () => tap(kind, n))); rows.set(n.id, r); return r; });
         let tail;
         if (writing === kind) {
           input = h("textarea", { rows: 1, placeholder: L.writePlaceholder });
@@ -263,12 +280,23 @@ function notesSection(entryID, kinds, { openFirst = false, onChange } = {}) {
           const grow = () => { input.style.height = "auto"; input.style.height = `${input.scrollHeight + 2}px`; };
           input.addEventListener("input", () => { draft = input.value; keep.disabled = !draft.trim(); grow(); });
           requestAnimationFrame(grow);
-          tail = h("div", { class: "compose" }, input, keep);
+          tail = keyed(`compose:${kind}`, h("div", { class: "compose" }, input, keep));
         } else {
-          tail = h("div", { class: "add" }, link(L.write, () => open(kind)));
+          tail = keyed(`add:${kind}`, h("div", { class: "add" }, link(L.write, () => open(kind))));
         }
-        return h("div", {}, h("p", { class: "q", text: L.question(kind, entry.topic) }), ...lines, tail);
+        return keyed(`q:${kind}`, h("div", {}, h("p", { class: "q", text: L.question(kind, entry.topic) }), ...lines, tail));
       })]));
+    // After the first drawing, whatever was not there before (a question, a line, the input)
+    // surfaces slowly and the block eases to its new height.
+    const keys = new Set([...el.querySelectorAll("[data-key]")].map((n) => n.dataset.key));
+    if (shownKeys) {
+      const fresh = (n) => n && !shownKeys.has(n.dataset.key);
+      for (const n of el.querySelectorAll("[data-key]")) {
+        if (fresh(n) && !fresh(n.parentElement.closest("[data-key]"))) fadeIn(n);
+      }
+      easeHeight(el, from);
+    }
+    shownKeys = keys;
     if (focus && input) input.focus();
   }
 
@@ -288,16 +316,19 @@ function notesSection(entryID, kinds, { openFirst = false, onChange } = {}) {
 function notesDisclosure(entryID) {
   let expanded = false;
   const label = h("button", { class: "disclosure" });
-  const body = slot();
+  const body = h("div", {});
   const refresh = () => {
     const entry = entryByID(entryID);
     label.replaceChildren(L.writings(entry ? noteCount(entry) : 0), h("i", { text: expanded ? "▲" : "▼" }));
   };
   const show = (animated) => {
-    const entry = entryByID(entryID);
-    const last = entry && lastWritten(entry);
-    body.show(expanded ? notesSection(entryID, KINDS, { onChange: refresh })
-      : h("div", { class: "tiny faint", text: last ? L.lastWritten(shortTime(last)) : "" }), animated);
+    const fill = () => {
+      const entry = entryByID(entryID);
+      const last = entry && lastWritten(entry);
+      body.replaceChildren(expanded ? notesSection(entryID, KINDS, { onChange: refresh })
+        : h("div", { class: "tiny faint", text: last ? L.lastWritten(shortTime(last)) : "" }));
+    };
+    if (animated) swapGently(body, fill); else fill();
   };
   label.onclick = () => { expanded = !expanded; refresh(); show(true); };
   refresh();
@@ -402,20 +433,20 @@ function revealedView() {
         draw.step < steps.length - 1 && button(L.next, () => {
           draw.step += 1;
           notes.setKinds(steps.slice(0, draw.step + 1));
+          const from = controls.offsetHeight;
           renderControls();
+          const disclaimer = controls.querySelector(".disclaimer");
+          if (disclaimer) fadeIn(disclaimer);
+          easeHeight(controls, from);
         }),
         button(L.done, finish, true)),
-      draw.step === steps.length - 1 && h("div", { class: "tiny faint", style: "text-align:right", text: L.disclaimer })]));
+      draw.step === steps.length - 1 && h("div", { class: "tiny faint disclaimer", style: "text-align:right", text: L.disclaimer })]));
   };
   renderControls();
   const others = h("div", { class: "col", style: "gap:12px" });
-  others.append(link(L.showOthers, () => {
-    others.classList.add("fade", "out");
-    setTimeout(() => {
-      others.replaceChildren(h("div", { class: "tiny faint", text: L.othersCaption }), ...EXAMPLES[lang].map(exampleCard));
-      others.classList.remove("out");
-    }, FADE / 2);
-  }));
+  others.append(link(L.showOthers, () => swapGently(others, () => {
+    others.replaceChildren(h("div", { class: "tiny faint", text: L.othersCaption }), ...EXAMPLES[lang].map(exampleCard));
+  })));
   others.firstChild.style.alignSelf = "flex-start";
   const rest = h("div", { class: "col fade out" }, h("div", { class: "col", style: "gap:14px" }, notes, controls), h("div", { class: "rule" }), others);
   const view = h("div", { class: "scroll" }, h("div", { class: "col", style: "padding-bottom:24px" }, turn, rest));
