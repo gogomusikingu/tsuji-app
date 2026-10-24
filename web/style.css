@@ -58,7 +58,7 @@ button:disabled { opacity: 0.35; cursor: default; }
 .fade { transition: opacity var(--fade) ease-in-out; }
 .fade.out { opacity: 0; pointer-events: none; }
 /* A block easing to a new height (swapGently / easeHeight in app.js). */
-.resizing { overflow: hidden; transition: opacity var(--fade) ease-in-out, height var(--fade) ease-in-out; }
+.resizing { overflow: hidden; overflow: clip; overflow-anchor: none; transition: opacity var(--fade) ease-in-out, height var(--fade) ease-in-out; }
 
 .scroll { overflow-y: auto; -webkit-overflow-scrolling: touch; padding: var(--pad) calc(var(--pad) + 8px); }
 .screen { padding: var(--pad); }

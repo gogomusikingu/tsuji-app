@@ -110,7 +110,17 @@ async function swapGently(el, fill) {
   if (mine !== el.swapping) return;
   fill();
   el.classList.remove("out");
-  easeHeight(el, from);
+  await easeHeight(el, from);
+}
+
+/** Brings `el` into view with a glide rather than a jump. */
+function glideTo(el, block = "nearest") {
+  const scroller = el.closest(".scroll");
+  if (!scroller) return;
+  const box = scroller.getBoundingClientRect(), r = el.getBoundingClientRect();
+  let dy = r.top - box.top - 24;
+  if (block === "nearest") dy = r.bottom > box.bottom - 24 ? r.bottom - box.bottom + 24 : Math.min(0, dy);
+  if (dy) scroller.scrollBy({ top: dy, behavior: "smooth" });
 }
 const countdown = (cls = "small") => h("span", { class: `countdown faint digits ${cls}`, text: L.nextDraw(formatRemaining(remaining())) });
 
@@ -289,7 +299,8 @@ function notesSection(entryID, kinds, { openFirst = false, onChange } = {}) {
     // After the first drawing, whatever was not there before (a question, a line, the input)
     // surfaces slowly and the block eases to its new height.
     const keys = new Set([...el.querySelectorAll("[data-key]")].map((n) => n.dataset.key));
-    if (shownKeys) {
+    const animating = shownKeys !== null;
+    if (animating) {
       const fresh = (n) => n && !shownKeys.has(n.dataset.key);
       for (const n of el.querySelectorAll("[data-key]")) {
         if (fresh(n) && !fresh(n.parentElement.closest("[data-key]"))) fadeIn(n);
@@ -297,7 +308,12 @@ function notesSection(entryID, kinds, { openFirst = false, onChange } = {}) {
       easeHeight(el, from);
     }
     shownKeys = keys;
-    if (focus && input) input.focus();
+    if (focus && input) {
+      // Focusing scrolls at once, which would cut the fade short: hold the scroll, then glide
+      // to the input once it has settled.
+      input.focus({ preventScroll: true });
+      if (animating) later(FADE).then(() => { if (input.isConnected) glideTo(input); });
+    }
   }
 
   el.setKinds = (next) => {
@@ -444,9 +460,13 @@ function revealedView() {
   };
   renderControls();
   const others = h("div", { class: "col", style: "gap:12px" });
-  others.append(link(L.showOthers, () => swapGently(others, () => {
-    others.replaceChildren(h("div", { class: "tiny faint", text: L.othersCaption }), ...EXAMPLES[lang].map(exampleCard));
-  })));
+  // The examples surface below the fold, so glide down to them once they have appeared.
+  others.append(link(L.showOthers, async () => {
+    await swapGently(others, () => {
+      others.replaceChildren(h("div", { class: "tiny faint", text: L.othersCaption }), ...EXAMPLES[lang].map(exampleCard));
+    });
+    glideTo(others, "start");
+  }));
   others.firstChild.style.alignSelf = "flex-start";
   const rest = h("div", { class: "col fade out" }, h("div", { class: "col", style: "gap:14px" }, notes, controls), h("div", { class: "rule" }), others);
   const view = h("div", { class: "scroll" }, h("div", { class: "col", style: "padding-bottom:24px" }, turn, rest));

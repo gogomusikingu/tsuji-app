@@ -10,4 +10,12 @@ fi
 URL="http://localhost:8765/${COOLDOWN:+?cooldown=$COOLDOWN}"
 (sleep 1 && open "$URL") &
 echo "Serving $URL  (Ctrl+C to stop)"
-exec python3 -m http.server 8765 --bind 127.0.0.1 --directory web
+# Serve without caching, so a reload always shows the latest code while developing.
+exec python3 -c '
+import functools, http.server
+class NoCache(http.server.SimpleHTTPRequestHandler):
+    def end_headers(self):
+        self.send_header("Cache-Control", "no-store")
+        super().end_headers()
+http.server.ThreadingHTTPServer(("127.0.0.1", 8765), functools.partial(NoCache, directory="web")).serve_forever()
+'
