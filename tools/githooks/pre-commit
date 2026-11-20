@@ -1,0 +1,21 @@
+#!/bin/sh
+# Check the layout of the docs before every commit, and run the tests when code is staged.
+# Enable once per clone: git config core.hooksPath tools/githooks
+root="$(git rev-parse --show-toplevel)" || exit 1
+python3 "$root/tools/check_docs.py" "$root" || {
+    echo "文書のチェックでエラーが出たので保存を止めた。上の [エラー] を直してから、もう一度保存する。" >&2
+    exit 1
+}
+staged="$(git diff --cached --name-only)"
+if echo "$staged" | grep -qE '^web/.*\.(js|html|css)$'; then
+    (cd "$root" && node --test web/tests/*.test.js >/dev/null) || {
+        echo "Web 版のテストが通らないので保存を止めた。" >&2
+        exit 1
+    }
+fi
+if echo "$staged" | grep -qE '^(Sources|Tests)/|^Package\.swift$'; then
+    (cd "$root" && SDKROOT=/Library/Developer/CommandLineTools/SDKs/MacOSX26.sdk swift test --scratch-path .build/sdk26 >/dev/null 2>&1) || {
+        echo "Swift のテストが通らないので保存を止めた（直後の 1 回目は失敗することがある。もう一度）。" >&2
+        exit 1
+    }
+fi

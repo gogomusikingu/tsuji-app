@@ -3,7 +3,7 @@
 迷ったとき、無作為に開いた聖書の一節を手がかりに「迷いからの出口」を得るアプリ。
 ナシーム・ニコラス・タレブ『反脆弱性』で紹介された書物占いを現代に落とし込む試み。占いではなく「考えるための道具」。
 
-詳細な設計・TODO は [specification.md](specification.md) を参照。
+詳細な設計は [specification.md](specification.md)（入口）、残りの作業は [TODO.md](TODO.md) を参照。作業の前に [CLAUDE.md](CLAUDE.md)。
 
 ## 必要な環境
 ### 使う人
@@ -38,7 +38,7 @@ Finder で `Web版を起動.command` をダブルクリックする（ブラウ�
 COOLDOWN=10 ./tools/run_web.sh     # 10秒で書をひらき直せる
 ```
 
-公開の仕組みは specification.md の 4.3 を参照。
+公開の仕組みは specification.md の 4.3（`spec/技術方針.md`）を参照。
 
 ## 聖書データ
 eBible.org のパブリックドメイン訳を使用（日本語: フリーダム・バイブル、英語: World English Bible）。
